@@ -21,19 +21,23 @@ int main(int argc, char** argv)
   ros::NodeHandle nh;
   ros::AsyncSpinner spinner(4);
   spinner.start();  
-  string planning_group = "manipulator";
+  string planning_group = "manipulator_and_endeffector";
+
+  // Wait for spinner to start
+  ros::Duration(2.0).sleep();
 
   // Create manipulation and perception objects
   Manipulation manipulation(nh, planning_group);
-  ROS_INFO("planning group is: ", planning_group);
-  Perception perception(nh);
+  // ROS_INFO("planning group is: %s", planning_group);
 
-  // Wait for spinner to start
-  ros::Duration(1.0).sleep();
+  // Instantiate perception object
+  Perception perception(nh);
 
   // Transform listener
   perception.transform_listener_ptr = TransformListenerPtr(
       new tf::TransformListener());
+
+  // instantiate subscribers after creating transform listener
   perception.init_subscriber(nh);
 
   // Planning scene interface
@@ -45,32 +49,26 @@ int main(int argc, char** argv)
       new moveit::planning_interface::MoveGroupInterface(manipulation.PLANNING_GROUP));
   
   // Set useful variables before robot manipulation begins
-  manipulation.move_group_ptr->setPlanningTime(45.0);			// This will give the robot the opportunity to plan for a while
+  manipulation.move_group_ptr->setPlanningTime(15.0);			// This will give the robot the opportunity to plan for a while
   manipulation.move_group_ptr->setMaxVelocityScalingFactor(0.25);	// This will limit the robot to moving at 1/4 its max speed (they can go very fast)
   manipulation.move_group_ptr->setPoseReferenceFrame("world");		// We want to establish that the common reference frame is "world" for any path planning
   manipulation.move_group_ptr->setPlannerId("RRTConnect");		// There are numerous default planners, you can experiment or research which will suit your needs
 
-  // Move robot into starting position and wait a moment
-  // You can create a function within the Manipulation class to move the robot to a default position or one specified within the SRDF
-  // You can find the SRDF in the following location for robots with a moveit_config package typically:
-  // <robot_name>_moveit_config >> config >> <robot_name>.srdf
-  // 
-  // You can use either an existing position (typically a position called "Home" will exist) or you can create your own
-  // This is also usually performed when making a custom moveit_config package from within the moveit_setup_assistant
-  // Although these positions are frequently automatically generated after you use the visualizer to move the robot to certain 
-  //   joint positions, you can also do this by hand by manually editing the SRDF
-  // 
-  // You may end up with something like this:
-  // manipulation.go_to_home();
-  // ros::Duration(1).sleep();
-  //
-  // The go_to_home() function does not currently exist, but you could create it within the manipulation_class header and cpp file
-  
+  // take snapshots
+  perception.collect_camera_snapshots();
+
+  ros::Duration(1).sleep();
+
+  // concatenate clouds
+  perception.concatenate_clouds();
+  ros::Duration(1).sleep();
+
+  // publish concatenated cloud
+  perception.publish_combined_cloud();
+
   while(ros::ok())
   {
-    // Put some code in here!
-    // The purpose of this node is to use 3d vision to accomplish a simple pick and place task
-    // You will probably want to move into several positions and halt for a moment to capture a pointcloud snapshot
+
   }  
 
   ros::waitForShutdown();

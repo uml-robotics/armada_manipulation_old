@@ -53,10 +53,17 @@ class Perception
   
     //Publishers & Subscribers
     ros::Publisher combined_cloud_pub;
-    ros::Subscriber wrist_camera_sub;
+    ros::Subscriber left_camera_sub;
+    ros::Subscriber right_camera_sub;
+    ros::Subscriber rear_camera_sub;
+
+    //Subscriber Callbacks
+    void wrist_camera_callback(const sensor_msgs::PointCloud2 msg);
+    void left_camera_callback(const sensor_msgs::PointCloud2 msg);
+    void right_camera_callback(const sensor_msgs::PointCloud2 msg);
+    void rear_camera_callback(const sensor_msgs::PointCloud2 msg);
 
     //Functions
-    void wrist_camera_callback(const sensor_msgs::PointCloud2 msg);
     PointCloud<PointXYZRGB> voxelgrid_filter(PointCloud<PointXYZRGB>::Ptr cloud);
     PointCloud<PointXYZRGB> sac_segmentation(PointCloud<PointXYZRGB>::Ptr cloud, PointIndices::Ptr inliers_plane);
     PointCloud<PointNormal> move_least_squares(PointCloud<PointXYZRGB>::Ptr cloud);
@@ -66,28 +73,31 @@ class Perception
   public:
 
     //Constructor
+    Perception(ros::NodeHandle nodeHandle);
+
+    //Subscriber initializer
+    void init_subscriber(ros::NodeHandle nodeHandle);
 
     //Members
     PointCloud<PointXYZRGB> combined_cloud;
     PointCloud<PointXYZRGB> current_cloud;
     PointCloud<PointXYZRGB> left_cloud;
+    PointCloud<PointXYZRGB> left_cloud_snapshot;
     PointCloud<PointXYZRGB> right_cloud;
-    PointCloud<PointXYZRGB> top_cloud;
-    PointCloud<PointXYZRGB> front_cloud;
+    PointCloud<PointXYZRGB> right_cloud_snapshot;
+    PointCloud<PointXYZRGB> rear_cloud;
+    PointCloud<PointXYZRGB> rear_cloud_snapshot;
     TransformListenerPtr transform_listener_ptr;
 
     bool points_not_found;
 
     //Functions
-    void init_subscriber(ros::NodeHandle nodeHandle);
-    Perception(ros::NodeHandle nodeHandle);
     void publish_combined_cloud();
     void concatenate_clouds();
-    void take_snapshot_left();
-    void take_snapshot_right();
-    void take_snapshot_top();
-    void take_snapshot_front();
-
+    void collect_camera_snapshots();
+    void snapshot_left_pointcloud();
+    void snapshot_right_pointcloud();
+    void snapshot_rear_pointcloud();
 };  
 
 #endif // PERCEPTION_CLASS
