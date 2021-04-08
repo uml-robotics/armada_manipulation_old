@@ -53,6 +53,7 @@ class Perception
   
     //Publishers & Subscribers
     ros::Publisher combined_cloud_pub;
+    ros::Subscriber wrist_camera_sub;
     ros::Subscriber left_camera_sub;
     ros::Subscriber right_camera_sub;
     ros::Subscriber rear_camera_sub;
@@ -78,7 +79,11 @@ class Perception
     //Subscriber initializer
     void init_subscriber(ros::NodeHandle nodeHandle);
 
-    //Members
+    //Node Member Variables
+    string nodeNamespace;
+    string gpdTopic;
+
+    //Pointcloud Member Variables
     PointCloud<PointXYZRGB> combined_cloud;
     PointCloud<PointXYZRGB> current_cloud;
     PointCloud<PointXYZRGB> left_cloud;
@@ -87,17 +92,28 @@ class Perception
     PointCloud<PointXYZRGB> right_cloud_snapshot;
     PointCloud<PointXYZRGB> rear_cloud;
     PointCloud<PointXYZRGB> rear_cloud_snapshot;
+    PointCloud<PointXYZRGB> wrist_cloud;
+    PointCloud<PointXYZRGB> wrist_cloud_snapshot;
+
+    //Pointer Variables
     TransformListenerPtr transform_listener_ptr;
 
+    //Flag Variables
     bool points_not_found;
 
     //Functions
     void publish_combined_cloud();
     void concatenate_clouds();
+    void concatenate_wrist_clouds();
     void collect_camera_snapshots();
     void snapshot_left_pointcloud();
     void snapshot_right_pointcloud();
     void snapshot_rear_pointcloud();
+    void snapshot_wrist_pointcloud();
+
+    //Helper Function/Function Wrappers
+    void generate_workspace_pointcloud();
+    void generate_wrist_pointcloud();
 };  
 
 #endif // PERCEPTION_CLASS

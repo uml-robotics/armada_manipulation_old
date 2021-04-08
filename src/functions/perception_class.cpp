@@ -17,18 +17,57 @@
 // PERCEPTION CLASS CONSTRUCTOR
 Perception::Perception(ros::NodeHandle nodeHandle)
 {
-  this->combined_cloud_pub = nodeHandle.advertise<sensor_msgs::PointCloud2>("combined_cloud", 1);
-  this->points_not_found = true;
+  nodeNamespace = nodeHandle.getNamespace();
+  gpdTopic = nodeNamespace + "/combined_cloud";
+  combined_cloud_pub = nodeHandle.advertise<sensor_msgs::PointCloud2>(gpdTopic, 1);
+  points_not_found = true;
+  init_subscriber(nodeHandle);
+
+  transform_listener_ptr = TransformListenerPtr(
+        new tf::TransformListener());
 }
 
 // INITIALIZE SUBSCRIBER FUNCTION
 // Seperate constructor for initialization of subscriber due to passing shared pointers as arguments before creating them
 void Perception::init_subscriber(ros::NodeHandle nodeHandle)
 {
-  this->left_camera_sub = nodeHandle.subscribe("/camera_left/depth/points", 1, &Perception::left_camera_callback, this);
-  this->right_camera_sub = nodeHandle.subscribe("/camera_right/depth/points", 1, &Perception::right_camera_callback, this);
-  this->rear_camera_sub = nodeHandle.subscribe("/camera_rear/depth/points", 1, &Perception::rear_camera_callback, this);
+  wrist_camera_sub = nodeHandle.subscribe("/camera/depth/points", 1, &Perception::wrist_camera_callback, this);
+  left_camera_sub = nodeHandle.subscribe("/camera_left/depth/points", 1, &Perception::left_camera_callback, this);
+  right_camera_sub = nodeHandle.subscribe("/camera_right/depth/points", 1, &Perception::right_camera_callback, this);
+  rear_camera_sub = nodeHandle.subscribe("/camera_rear/depth/points", 1, &Perception::rear_camera_callback, this);
 }
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Perception Helper Functions
+// function wrappers for cleaner code
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+// TAKE SNAPSHOT AND CONCATENATE IMAGES THEN PUBLISH
+void Perception::generate_workspace_pointcloud()
+{
+    collect_camera_snapshots();
+    ros::Duration(0.5).sleep();
+
+    concatenate_clouds();
+    ros::Duration(0.5).sleep();
+
+    publish_combined_cloud();
+    ros::Duration(0.5).sleep();
+}
+
+// TAKE SNAPSHOT OF ONLY WRIST CAMERA AND PUBLISH
+void Perception::generate_wrist_pointcloud()
+{
+    snapshot_wrist_pointcloud();
+    ros::Duration(0.5).sleep();
+
+    concatenate_wrist_clouds();
+    ros::Duration(0.5).sleep();
+
+    publish_combined_cloud();
+    ros::Duration(0.5).sleep();
+}
+
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Camera Callback Functions
@@ -36,37 +75,92 @@ void Perception::init_subscriber(ros::NodeHandle nodeHandle)
 // transform pointclouds into world frame for use
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+// WRIST CAMERA CALLBACK FUNCTION
+void Perception::wrist_camera_callback(const sensor_msgs::PointCloud2 msg)
+{
+    fromROSMsg(msg, wrist_cloud);
+
+    ros::Time stamp = ros::Time(0);
+    tf::StampedTransform transform;
+
+    pcl_conversions::toPCL(stamp, wrist_cloud.header.stamp);
+
+    try
+    {
+        transform_listener_ptr->waitForTransform("world", wrist_cloud.header.frame_id, stamp, ros::Duration(10.0));
+        transform_listener_ptr->lookupTransform("world", wrist_cloud.header.frame_id, stamp, transform);
+    } catch (tf::TransformException err)
+    {
+        ROS_ERROR("%s", err.what());
+    }
+
+    pcl_ros::transformPointCloud("world", wrist_cloud, wrist_cloud, *transform_listener_ptr);
+}
+
 // LEFT CAMERA CALLBACK FUNCTION
 void Perception::left_camera_callback(const sensor_msgs::PointCloud2 msg)
 {
-    fromROSMsg(msg, this->left_cloud);
+    fromROSMsg(msg, left_cloud);
 
     ros::Time stamp = ros::Time(0);
-    pcl_conversions::toPCL(stamp, this->left_cloud.header.stamp);
-    this->transform_listener_ptr->waitForTransform("/world", this->left_cloud.header.frame_id, stamp, ros::Duration(10.0));
-    pcl_ros::transformPointCloud("/world", this->left_cloud, this->left_cloud, *this->transform_listener_ptr);
+    tf::StampedTransform transform;
+
+    pcl_conversions::toPCL(stamp, left_cloud.header.stamp);
+
+    try
+    {
+        transform_listener_ptr->waitForTransform("world", left_cloud.header.frame_id, stamp, ros::Duration(10.0));
+        transform_listener_ptr->lookupTransform("world", left_cloud.header.frame_id, stamp, transform);
+    } catch (tf::TransformException err)
+    {
+        ROS_ERROR("%s", err.what());
+    }
+
+    pcl_ros::transformPointCloud("world", left_cloud, left_cloud, *transform_listener_ptr);
 }
 
 // RIGHT CAMERA CALLBACK FUNCTION
 void Perception::right_camera_callback(const sensor_msgs::PointCloud2 msg)
 {
-    fromROSMsg(msg, this->right_cloud);
+    fromROSMsg(msg, right_cloud);
 
     ros::Time stamp = ros::Time(0);
-    pcl_conversions::toPCL(stamp, this->right_cloud.header.stamp);
-    this->transform_listener_ptr->waitForTransform("/world", this->right_cloud.header.frame_id, stamp, ros::Duration(10.0));
-    pcl_ros::transformPointCloud("/world", this->right_cloud, this->right_cloud, *this->transform_listener_ptr);
+    tf::StampedTransform transform;
+
+    pcl_conversions::toPCL(stamp, right_cloud.header.stamp);
+
+    try
+    {
+        transform_listener_ptr->waitForTransform("world", right_cloud.header.frame_id, stamp, ros::Duration(10.0));
+        transform_listener_ptr->lookupTransform("world", right_cloud.header.frame_id, stamp, transform);
+    } catch (tf::TransformException err)
+    {
+        ROS_ERROR("%s", err.what());
+    }
+
+    pcl_ros::transformPointCloud("world", right_cloud, right_cloud, *transform_listener_ptr);
 }
 
 // REAR CAMERA CALLBACK FUNCTION
 void Perception::rear_camera_callback(const sensor_msgs::PointCloud2 msg)
 {
-    fromROSMsg(msg, this->rear_cloud);
+    fromROSMsg(msg, rear_cloud);
 
     ros::Time stamp = ros::Time(0);
-    pcl_conversions::toPCL(stamp, this->rear_cloud.header.stamp);
-    this->transform_listener_ptr->waitForTransform("/world", this->rear_cloud.header.frame_id, stamp, ros::Duration(10.0));
-    pcl_ros::transformPointCloud("/world", this->rear_cloud, this->rear_cloud, *this->transform_listener_ptr);
+    tf::StampedTransform transform;
+
+    pcl_conversions::toPCL(stamp, rear_cloud.header.stamp);
+
+    try
+    {
+        transform_listener_ptr->waitForTransform("world", rear_cloud.header.frame_id, stamp, ros::Duration(10.0));
+        transform_listener_ptr->lookupTransform("world", rear_cloud.header.frame_id, stamp, transform);
+    } catch (tf::TransformException err)
+    {
+        ROS_ERROR("%s", err.what());
+    }
+
+    pcl_ros::transformPointCloud("world", rear_cloud, rear_cloud, *transform_listener_ptr);
 }
 
 // ********************************************************************************************
@@ -81,9 +175,9 @@ void Perception::publish_combined_cloud()
 {
 
   sensor_msgs::PointCloud2 cloud;
-  toROSMsg(this->combined_cloud, cloud);
+  toROSMsg(combined_cloud, cloud);
 
-  this->combined_cloud_pub.publish(cloud);
+  combined_cloud_pub.publish(cloud);
 }
 
 // ********************************************************************************************
@@ -102,19 +196,25 @@ void Perception::collect_camera_snapshots() {
 // SNAPSHOT LEFT POINTCLOUD FUNCTION
 void Perception::snapshot_left_pointcloud()
 {
-  this->left_cloud_snapshot = this->left_cloud;
+  left_cloud_snapshot = left_cloud;
 }
 
 // SNAPSHOT RIGHT POINTCLOUD FUNCTION
 void Perception::snapshot_right_pointcloud()
 {
-  this->right_cloud_snapshot = this->right_cloud;
+  right_cloud_snapshot = right_cloud;
 }
 
 // SNAPSHOT REAR POINTCLOUD FUNCTION
 void Perception::snapshot_rear_pointcloud()
 {
-  this->rear_cloud_snapshot = this->rear_cloud;
+  rear_cloud_snapshot = rear_cloud;
+}
+
+// SNAPSHOT WRIST POINTCLOUD FUNCTION
+void Perception::snapshot_wrist_pointcloud()
+{
+  wrist_cloud_snapshot = wrist_cloud;
 }
 
 // ********************************************************************************************
@@ -129,19 +229,18 @@ void Perception::concatenate_clouds()
 {
   PointCloud<PointXYZRGB>::Ptr temp_cloud(new PointCloud<PointXYZRGB>);
     
-  *temp_cloud = this->left_cloud_snapshot;
-  *temp_cloud+= this->right_cloud_snapshot;
-  *temp_cloud+= this->rear_cloud_snapshot;
+  *temp_cloud = left_cloud_snapshot;
+  *temp_cloud+= right_cloud_snapshot;
+  *temp_cloud+= rear_cloud_snapshot;
 
   // Uncomment to save concatenated pointcloud if desired
   // pcl::io::savePCDFileASCII("~/pcd/single_workstation_object_sample.pcd", *temp_cloud);
 
-  /*
   // Passthrough filter to limit to work area
   PassThrough<PointXYZRGB> pass_w;
   pass_w.setInputCloud (temp_cloud);
   pass_w.setFilterFieldName ("x");
-  pass_w.setFilterLimits (-0.9, -0.3);
+  pass_w.setFilterLimits (-0.6, 0.6);
   pass_w.filter(*temp_cloud);
 
   PassThrough<PointXYZRGB> pass_y;
@@ -153,9 +252,40 @@ void Perception::concatenate_clouds()
   PassThrough<PointXYZRGB> pass_z;
   pass_z.setInputCloud (temp_cloud);
   pass_z.setFilterFieldName ("z");
-  pass_z.setFilterLimits (-0.02, 0.3);
+  pass_z.setFilterLimits (0.8, 1.2);
   pass_z.filter(*temp_cloud);
-  */
+
+  this->combined_cloud = *temp_cloud;
+}
+
+// CONCATENATE WRIST CLOUDS FUNCTION
+void Perception::concatenate_wrist_clouds()
+{
+  PointCloud<PointXYZRGB>::Ptr temp_cloud(new PointCloud<PointXYZRGB>);
+
+  *temp_cloud = wrist_cloud_snapshot;
+
+  // Uncomment to save concatenated pointcloud if desired
+  // pcl::io::savePCDFileASCII("~/pcd/single_workstation_object_sample.pcd", *temp_cloud);
+
+  // Passthrough filter to limit to work area
+  PassThrough<PointXYZRGB> pass_w;
+  pass_w.setInputCloud (temp_cloud);
+  pass_w.setFilterFieldName ("x");
+  pass_w.setFilterLimits (-0.6, 0.6);
+  pass_w.filter(*temp_cloud);
+
+  PassThrough<PointXYZRGB> pass_y;
+  pass_y.setInputCloud (temp_cloud);
+  pass_y.setFilterFieldName ("y");
+  pass_y.setFilterLimits (-0.45, 0.45);
+  pass_y.filter(*temp_cloud);
+
+  PassThrough<PointXYZRGB> pass_z;
+  pass_z.setInputCloud (temp_cloud);
+  pass_z.setFilterFieldName ("z");
+  pass_z.setFilterLimits (0.8, 1.2);
+  pass_z.filter(*temp_cloud);
 
   this->combined_cloud = *temp_cloud;
 }

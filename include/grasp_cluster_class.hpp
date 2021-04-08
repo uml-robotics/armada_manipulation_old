@@ -38,9 +38,12 @@ class Grasp_Cluster
     gpd::GraspConfigList candidates;
     gpd::GraspConfig grasp;
     std_msgs::Float32 score;
+    double numGrasps;
 
-    // functions
+    // Constructor
     Grasp_Cluster(ros::NodeHandle nodeHandle);
+
+    // Functions
     gpd::GraspConfigList get_grasp_candidates();
     void set_planning(bool val);
 
