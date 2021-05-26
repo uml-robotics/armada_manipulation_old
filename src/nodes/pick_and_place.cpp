@@ -1,14 +1,10 @@
 // ********************************************************************************************
 // Author: Brian Flynn;
-// Test Engineer - NERVE Center @ UMASS Lowell
-// basic_manipulation_and_3d_perception.cpp
+// NERVE Center @ UMASS Lowell
+// pick_and_place_s_cams_gpd.cpp
 //
-// manipulation_class & perception_class node
-//
-// Utilizing the simulated ARMada workstation and a simulated robot, use any vision systems available
-// to perform a very simple task - move the robot to a few set positions (created in the robot's moveit
-// config package in its SRDF) and then concatenate the pointclouds and publish the result on a new topic
-// This node focuses on 3D vision using PCL
+// perform a pick and place operation using the stationary left, right and back cameras
+// on the workstation and gpd to plan grasp poses
 // ********************************************************************************************
 
 #include "manipulation_class.hpp"
@@ -18,10 +14,10 @@
 int main(int argc, char** argv)
 {
   // Initialize node & spinner
-  ros::init(argc,argv,"basic_manipulation_and_3d_perception_node");
+  ros::init(argc,argv,"pick_and_place_node");
   ros::NodeHandle nh;
   ros::AsyncSpinner spinner(4);
-  spinner.start();  
+  spinner.start();
   ros::Duration(1.0).sleep();
 
   // Instantiate and retrieve planning group from parameters, this should be set outside the node
@@ -38,9 +34,9 @@ int main(int argc, char** argv)
   Manipulation manipulation(nh, planning_group);
   Perception perception(nh);
   Grasp_Cluster grasp_cluster(nh);
-  
+
   // Set planning variables and reset robot position
-  manipulation.move_group_ptr->setPlanningTime(15.0);
+  manipulation.move_group_ptr->setPlanningTime(15.0);basic_manipulation_and_3d_perception_node
   manipulation.move_group_ptr->setMaxVelocityScalingFactor(0.25);
   manipulation.move_group_ptr->setPlannerId("RRTConnect");
 
@@ -79,7 +75,7 @@ int main(int argc, char** argv)
       // set planning flag to OK for next loop
       grasp_cluster.set_planning(0);
       ros::Duration(0.5).sleep();
-  }  
+  }
 
   ros::waitForShutdown();
   return 0;
