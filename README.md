@@ -16,6 +16,4 @@ The `uml_hri_nerve_pick_and_place` package provides some C++ code and architectu
 
 ## Setup
 The code contained within this package uses Moveit! to control the robots both in simulation and on the actual hardware.   
-Certain pieces of code may require other packages (gripper-specific packages or grasping/planning packages) in order to function properly.  
-
-In order to use this package currently, you will need Moveit! installed. You can find instructions for installing Moveit! on your machine [here](http://docs.ros.org/kinetic/api/moveit\_tutorials/html/doc/getting\_started/getting\_started.html)  
+Certain pieces of code may require other packages (gripper-specific packages or grasping/planning packages) in order to function properly.
