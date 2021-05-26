@@ -23,117 +23,60 @@
 // MANIPULATION CLASS CONSTRUCTOR
 Manipulation::Manipulation(ros::NodeHandle nodeHandle, std::string planning_group)
 {
-  // start off by clearing the octomap in case it was previously occupied
-  clearOctomap = nodeHandle.serviceClient<std_srvs::Empty>("/clear_octomap");
+    // start off by clearing the octomap in case it was previously occupied
+    clearOctomap = nodeHandle.serviceClient<std_srvs::Empty>("/clear_octomap");
 
-  // establish all pointers
-  planning_scene_ptr = PlanningScenePtr(
+    // establish all pointers
+    planning_scene_ptr = PlanningScenePtr(
         new moveit::planning_interface::PlanningSceneInterface());
-  move_group_ptr = MoveGroupPtr(
+    move_group_ptr = MoveGroupPtr(
         new moveit::planning_interface::MoveGroupInterface(planning_group));
-  transform_listener_ptr = TransformListenerPtr(
+    transform_listener_ptr = TransformListenerPtr(
         new tf::TransformListener());
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Manipulation Gripper Functions
+// Gripper Functions
 // Open and close gripper to different positions
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-// OPEN GRIPPER FUNCTION
-void Manipulation::openGripper(trajectory_msgs::JointTrajectory& posture)
-{
-  posture.joint_names.resize(2);
-  posture.joint_names[0] = "finger_joint";
-  posture.joint_names[1] = "right_outer_knuckle_joint";
-
-  posture.points.resize(1);
-  posture.points[0].positions.resize(2);
-  posture.points[0].positions[0] = 0.00;
-  posture.points[0].positions[1] = 0.00;
-  posture.points[0].time_from_start = ros::Duration(0.5);
-}
-
-// CLOSE GRIPPER FUNCTION
-void Manipulation::closeGripper(trajectory_msgs::JointTrajectory& posture)
-{
-  posture.joint_names.resize(2);
-  posture.joint_names[0] = "finger_joint";
-  posture.joint_names[1] = "right_outer_knuckle_joint";
-
-  posture.points.resize(1);
-  posture.points[0].positions.resize(2);
-  posture.points[0].positions[0] = 0.78;
-  posture.points[0].positions[1] = 0.78;
-  posture.points[0].time_from_start = ros::Duration(0.5);
-}
-
 // CLOSEVAR GRIPPER FUNCTION
 // set the gripper to somewhere between fully opened and closed
-void Manipulation::closeVarGripper(trajectory_msgs::JointTrajectory& posture, double closeVal)
+// for robotiq_2f_85 open: 0, closed: ~0.8
+void Manipulation::setGripper(trajectory_msgs::JointTrajectory& posture, double closeVal)
 {
-  posture.joint_names.resize(2);
-  posture.joint_names[0] = "finger_joint";
-  posture.joint_names[1] = "right_outer_knuckle_joint";
+    posture.joint_names.resize(2);
+    posture.joint_names[0] = "finger_joint";
+    posture.joint_names[1] = "right_outer_knuckle_joint";
 
-  // Don't let val fall above/below max/min values
-  if (closeVal >= 0.78)
-  {
-      closeVal = 0.78;
-  } else if (closeVal <= 0.00)
-  {
-      closeVal = 0.00;
-  }
+    // Don't let val fall above/below max/min values
+    if (closeVal >= 0.78) {
+        closeVal = 0.78;
+    } else if (closeVal <= 0.00) {
+        closeVal = 0.00;
+    }
 
-  posture.points.resize(1);
-  posture.points[0].positions.resize(2);
-  posture.points[0].positions[0] = closeVal;
-  posture.points[0].positions[1] = closeVal;
-  posture.points[0].time_from_start = ros::Duration(0.5);
+    posture.points.resize(1);
+    posture.points[0].positions.resize(2);
+    posture.points[0].positions[0] = closeVal;
+    posture.points[0].positions[1] = closeVal;
+    posture.points[0].time_from_start = ros::Duration(0.5);
 }
+
+/*
+void Manipulation::setGripperJointPos(double closeVal)
+{
+
+}
+*/
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Manipulation Pick and Place Functions
 // Control picking and placing of objects - also approach and retreat
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-// Function for creating end-effector poses from GPD msg.
-void Manipulation::createPickingEEFPose(gpd::GraspConfig grasp_msg)
-{
-  tf::StampedTransform tf_base_odom;
-  tf::StampedTransform tf_hand_odom;
-  tf::Matrix3x3 rot_matrix_grasp_base(-grasp_msg.axis.x, grasp_msg.binormal.x, grasp_msg.approach.x,
-                                      -grasp_msg.axis.y, grasp_msg.binormal.y, grasp_msg.approach.y,
-                                      -grasp_msg.axis.z, grasp_msg.binormal.z, grasp_msg.approach.z);
-
-  tf::Vector3 tr_grasp_base(grasp_msg.bottom.x, grasp_msg.bottom.y, grasp_msg.bottom.z);
-  tf::Transform tf_grasp_base(rot_matrix_grasp_base, tr_grasp_base);
-
-  try
-  {
-    transform_listener_ptr->waitForTransform("base_link", "base_link", ros::Time(0), ros::Duration(3.0) );
-    transform_listener_ptr->lookupTransform("base_link", "base_link", ros::Time(0), tf_base_odom);
-  } catch (tf::TransformException err)
-  {
-    ROS_ERROR("%s", err.what());
-  }
-
-  // Find grasp pose
-  tf::Transform tf_grasp_odom_(tf::Quaternion(0, 0, M_PI/2, 1), tf::Vector3(0, 0, -0.148));
-  tf::Transform tf_grasp_odom = tf_base_odom * tf_grasp_base * tf_grasp_odom_;
-  tf::poseTFToMsg(tf_grasp_odom, grasp_poses.actual);
-
-  // Find pre-grasp pose
-  tf::Transform tf_pregrasp_odom_(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, -0.08));
-  tf::Transform tf_pregrasp_odom = tf_grasp_odom * tf_pregrasp_odom_;
-  tf::poseTFToMsg(tf_pregrasp_odom, grasp_poses.pre);
-
-  // Find after-grasp pose
-  grasp_poses.after = grasp_poses.actual;
-  grasp_poses.after.position.z = grasp_poses.after.position.z + 0.15;
-}
-
-void Manipulation::set_target_pose(geometry_msgs::Pose graspPose)
+// Given a particular geometry_msgs::Pose with unnormalized quaternion, set target_pose
+void Manipulation::set_target_pose_rpy(geometry_msgs::Pose graspPose)
 {
     q.setRPY(graspPose.orientation.x - M_PI, graspPose.orientation.y, graspPose.orientation.z);
     q.normalize();
@@ -143,108 +86,152 @@ void Manipulation::set_target_pose(geometry_msgs::Pose graspPose)
     target_pose.position.z = graspPose.position.z;
 }
 
-void Manipulation::go_to_poses_test(geometry_msgs::Pose graspPose)
+// Given some graspPoses, set target pose
+void Manipulation::set_target_pose_from_grasps(geometry_msgs::Pose graspPositionPose, geometry_msgs::Pose graspOrientationPose)
 {
-    target_pose.orientation = grasp_poses.actual.orientation;
-    target_pose.position.x = graspPose.position.x;
-    target_pose.position.y = graspPose.position.y;
-    target_pose.position.z = graspPose.position.z;
+    target_pose.orientation = graspOrientationPose.orientation;
+    target_pose.position.x = graspPositionPose.position.x;
+    target_pose.position.y = graspPositionPose.position.y;
+    target_pose.position.z = graspPositionPose.position.z;
+}
+
+void Manipulation::plan_and_move()
+{
+    move_group_ptr->setPoseTarget(target_pose);
+    move_group_ptr->setGoalPositionTolerance(0.001);
+    move_group_ptr->setGoalOrientationTolerance(0.002);
+    move_group_ptr->setPlanningTime(5.0);
+    move_group_ptr->setNumPlanningAttempts(30);
+    if(move_group_ptr->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS) {
+        move_group_ptr->move();
+    }
+}
+
+bool Manipulation::plan(geometry_msgs::Pose graspPositionPose, geometry_msgs::Pose graspOrientationPose)
+{
+    ROS_INFO("planning ...");
+    set_target_pose_from_grasps(graspPositionPose, graspOrientationPose);
 
     move_group_ptr->setPoseTarget(target_pose);
     move_group_ptr->setGoalPositionTolerance(0.001);
     move_group_ptr->setGoalOrientationTolerance(0.002);
     move_group_ptr->setPlanningTime(5.0);
     move_group_ptr->setNumPlanningAttempts(30);
-    if(move_group_ptr->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS)
-    {
-        move_group_ptr->move();
+
+    return (move_group_ptr->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+}
+
+// Using helper function createPickingEEFPose graspPoses, plan and execute a picking maneuver with 3 individual movements
+void Manipulation::pick(std::vector<GraspPose> graspPoseList)
+{
+    int n = graspPoseList.size();
+    if (n >10) {
+        // limit this value for now
+        n = 10;
     }
+    for (int i = 0; i < n; ++i) {
+        if (plan(graspPoseList[i].pre, graspPoseList[i].actual) && plan(graspPoseList[i].actual, graspPoseList[i].actual)) {
+            executeGrasp(graspPoseList[i]);
+            ROS_INFO("that was grasp candidate %f ...", i + 1);
+            ros::Duration(0.5).sleep();
+            break;
+        }
+    }
+
+    /*
+     * All candidates failed planning
+     *
+     * do something about it here, set flag so program can loop
+     */
 }
 
-void Manipulation::pick_and_place(GraspPose graspPoses)
+void Manipulation::executeGrasp(GraspPose graspPose)
 {
-  go_to_poses_test(graspPoses.pre);
-  ros::Duration(1.0).sleep();
+    set_target_pose_from_grasps(graspPose.pre, graspPose.actual);
+    plan_and_move();
+    ros::Duration(0.5).sleep();
 
-  go_to_poses_test(graspPoses.actual);
-  ros::Duration(1.0).sleep();
+    set_target_pose_from_grasps(graspPose.actual, graspPose.actual);
+    plan_and_move();
+    ros::Duration(0.5).sleep();
 
-  go_to_poses_test(graspPoses.pre);
-  ros::Duration(1.0).sleep();
+    set_target_pose_from_grasps(graspPose.pre, graspPose.actual);
+    plan_and_move();
+    ros::Duration(0.5).sleep();
 }
 
-void Manipulation::pick(GraspPose graspPoses)
+void Manipulation::place(geometry_msgs::Pose placePose)
 {
-    // TODO
+    /*
+     * TODO:
+     *
+     * set_target_pose(some_known_position);
+     * plan_and_move
+     */
+    set_target_pose_rpy(placePose);
+    plan_and_move();
 }
 
-void Manipulation::place(GraspPose graspPoses)
+void Manipulation::pick_and_place(std::vector<GraspPose> graspPoseList, geometry_msgs::Pose placePose)
 {
-    // TODO
-}
-
-void Manipulation::pick_and_place()
-{
-    // TODO?
+    pick(graspPoseList);
+    place(placePose);
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Manipulation Helper Functions
+// Manipulation-GPD Helper Functions
 // Pass variables or otherwise wrap functions together
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 void Manipulation::store_gpd_vals(gpd::GraspConfigList msg)
 {
-  ROS_INFO("storing gpd vals");
-  candidates = msg;
-  if(candidates.grasps.size() == 0)
-  {
-    ROS_INFO("error: grasp list is empty");
-  }
+    ROS_INFO("storing gpd vals");
+    candidates = msg;
+    if(candidates.grasps.size() == 0) {
+        ROS_INFO("error: grasp list is empty");
+    }
 }
 
-void Manipulation::addCollisionObjects(GraspPose graspPoses)
+void Manipulation::createPickingEEFPoseList()
 {
-  // Create vector to hold 3 collision objects.
-  std::vector<moveit_msgs::CollisionObject> collision_objects;
-  collision_objects.resize(2);
+    int n = candidates.grasps.size();
+    graspPoseList.resize(n);
+    for (int i = 0; i < n; ++i) {
+        graspPoseList[i] = createPickingEEFPose(candidates.grasps[i]);
+    }
+    ROS_INFO("grasp pose list generated");
+}
 
-  collision_objects[0].id = "object";
-  collision_objects[0].header.frame_id = "world";
+GraspPose Manipulation::createPickingEEFPose(gpd::GraspConfig grasp_msg)
+{
+    GraspPose thisGrasp;
+    tf::Matrix3x3 rot_matrix_grasp_base(-grasp_msg.axis.x, grasp_msg.binormal.x, grasp_msg.approach.x,
+                                      -grasp_msg.axis.y, grasp_msg.binormal.y, grasp_msg.approach.y,
+                                      -grasp_msg.axis.z, grasp_msg.binormal.z, grasp_msg.approach.z);
 
-  /* Define the primitive and its dimensions. */
-  collision_objects[0].primitives.resize(1);
-  collision_objects[0].primitives[0].type = collision_objects[0].primitives[0].BOX;
-  collision_objects[0].primitives[0].dimensions.resize(3);
-  collision_objects[0].primitives[0].dimensions[0] = 0.01;
-  collision_objects[0].primitives[0].dimensions[1] = 0.01;
-  collision_objects[0].primitives[0].dimensions[2] = 0.01;
+    tf::Vector3 tr_grasp_base(grasp_msg.bottom.x, grasp_msg.bottom.y, grasp_msg.bottom.z);
+    tf::Transform tf_grasp_base(rot_matrix_grasp_base, tr_grasp_base);
+    tf::StampedTransform tf_base_odom;
 
-  collision_objects[0].primitive_poses.resize(1);
-  collision_objects[0].primitive_poses[0].position.x = graspPoses.actual.position.x;
-  collision_objects[0].primitive_poses[0].position.y = graspPoses.actual.position.y;
-  collision_objects[0].primitive_poses[0].position.z = graspPoses.actual.position.z;
+    try {
+        transform_listener_ptr->waitForTransform("base_link", "base_link", ros::Time(0), ros::Duration(3.0) );
+        transform_listener_ptr->lookupTransform("base_link", "base_link", ros::Time(0), tf_base_odom);
+    } catch (tf::TransformException err) {
+        ROS_ERROR("%s", err.what());
+    }
 
-  collision_objects[0].operation = collision_objects[0].ADD;
+    // Find grasp actual, pre and after poses
+    tf::Transform tf_grasp_odom_(tf::Quaternion(0, 0, -M_PI/4 - M_PI/16, 1), tf::Vector3(0, 0, -0.148));
+    tf::Transform tf_grasp_odom = tf_base_odom * tf_grasp_base * tf_grasp_odom_;
+    tf::poseTFToMsg(tf_grasp_odom, thisGrasp.actual);
 
-  // Add the second table where we will be placing the cube.
-  collision_objects[1].id = "table";
-  collision_objects[1].header.frame_id = "world";
+    tf::Transform tf_pregrasp_odom_(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, -0.08));
+    tf::Transform tf_pregrasp_odom = tf_grasp_odom * tf_pregrasp_odom_;
+    tf::poseTFToMsg(tf_pregrasp_odom, thisGrasp.pre);
 
-  /* Define the primitive and its dimensions. */
-  collision_objects[1].primitives.resize(1);
-  collision_objects[1].primitives[0].type = collision_objects[1].primitives[0].BOX;
-  collision_objects[1].primitives[0].dimensions.resize(3);
-  collision_objects[1].primitives[0].dimensions[0] = 0.3;
-  collision_objects[1].primitives[0].dimensions[1] = 0.3;
-  collision_objects[1].primitives[0].dimensions[2] = 0.3;
+    tf::Transform tf_aftergrasp_odom_(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, 0));
+    tf::Transform tf_aftergrasp_odom = tf_grasp_odom * tf_aftergrasp_odom_;
+    tf::poseTFToMsg(tf_aftergrasp_odom, thisGrasp.after);
 
-  collision_objects[1].primitive_poses.resize(1);
-  collision_objects[1].primitive_poses[0].position.x = -0.45;
-  collision_objects[1].primitive_poses[0].position.y = -0.45;
-  collision_objects[1].primitive_poses[0].position.z = 0.67;
-
-  collision_objects[1].operation = collision_objects[1].ADD;
-
-  planning_scene_ptr->applyCollisionObjects(collision_objects);
+    return thisGrasp;
 }

@@ -1,4 +1,3 @@
-
 // ********************************************************************************************
 // Author: Brian Flynn;
 // Test Engineer - NERVE Center @ UMASS Lowell
@@ -7,6 +6,10 @@
 
 #ifndef GRASP_CLUSTER_CLASS_HPP
 #define GRASP_CLUSTER_CLASS_HPP
+
+#include <cstring>
+#include <ctime>
+#include <iostream>
 
 #include "ros/ros.h"
 #include <gpd/GraspConfigList.h>
@@ -21,6 +24,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
+using namespace std;
 
 class Grasp_Cluster
 {
@@ -34,6 +38,10 @@ class Grasp_Cluster
 
   public:
 
+    //Node Member Variables
+    string nodeNamespace;
+    string cloudTopic;
+
     // GPD Grasp members
     gpd::GraspConfigList candidates;
     gpd::GraspConfig grasp;
@@ -46,9 +54,11 @@ class Grasp_Cluster
     // Functions
     gpd::GraspConfigList get_grasp_candidates();
     void set_planning(bool val);
+    void set_retry(bool val);
 
     // Flags and triggers
     bool planning_grasp;
+    bool retry;
 
 };
 

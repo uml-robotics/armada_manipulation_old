@@ -37,22 +37,10 @@ struct GraspPose{
   geometry_msgs::Pose pre;
   geometry_msgs::Pose actual;
   geometry_msgs::Pose after;
-  float distance;
 };
 
 class Manipulation
 {
-  private:
-
-    //Publishers & Subscribers
-    ros::Publisher placeholder_pub;
-    ros::Subscriber placeholder_sub;
-
-    //Subscriber Callbacks
-    void placeholder_sub_callback(const int num);
-
-    //Functions
-
   public:
 
     //Constructor
@@ -67,14 +55,8 @@ class Manipulation
     moveit::core::RobotStatePtr current_state;
 
     //Grasp Planning Member Variables
-    GraspPose grasp_poses;
+    std::vector<GraspPose> graspPoseList;
     gpd::GraspConfigList candidates;
-    gpd::GraspConfig grasp;
-    geometry_msgs::Point pose_top;
-    geometry_msgs::Point pose_bottom;
-    geometry_msgs::Point pose_center;
-    geometry_msgs::Point pose_sample;
-    geometry_msgs::Vector3 grasp_orientation;
 
     //Manipulation Pose Member Variables
     std::vector<double> joint_group_positions;
@@ -91,23 +73,22 @@ class Manipulation
     bool pose_success;
 
     //Gripper Functions
-    void openGripper(trajectory_msgs::JointTrajectory& posture);
-    void closeGripper(trajectory_msgs::JointTrajectory& posture);
-    void closeVarGripper(trajectory_msgs::JointTrajectory& posture, double closeVal);
+    void setGripper(trajectory_msgs::JointTrajectory& posture, double closeVal);
 
     //Functions
-    void pick(GraspPose graspPoses);
-    void place(GraspPose graspPoses);
-    void pick_and_place();
-    void pick_and_place(GraspPose graspPose);
-    void set_target_pose(geometry_msgs::Pose graspPose);
-    void go_to_poses_test(geometry_msgs::Pose graspPose);
-
+    void pick(std::vector<GraspPose> graspPoseList);
+    void place(geometry_msgs::Pose placePose);
+    void pick_and_place(std::vector<GraspPose> graspPoseList, geometry_msgs::Pose placePose);
+    void set_target_pose_rpy(geometry_msgs::Pose graspPose);
+    void set_target_pose_from_grasps(geometry_msgs::Pose graspPositionPose, geometry_msgs::Pose graspOrientationPose);
+    bool plan(geometry_msgs::Pose graspPositionPose, geometry_msgs::Pose graspOrientationPose);
+    void executeGrasp(GraspPose graspPose);
+    void plan_and_move();
 
     //Helper Funcitons
     void store_gpd_vals(gpd::GraspConfigList candidates);
-    void createPickingEEFPose(gpd::GraspConfig grasp_msg);
-    void addCollisionObjects(GraspPose graspPoses);
+    void createPickingEEFPoseList();
+    GraspPose createPickingEEFPose(gpd::GraspConfig grasp_msg);
 
 };
 

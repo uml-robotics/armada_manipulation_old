@@ -2,7 +2,8 @@
 <launch>
   
   <!-- Arguments -->
-  <arg name="sim" default="false"/>
+  <arg name="sim" default="false" />
+  <arg name="namespace" default="" />
 
   <!-- Load hand geometry parameters -->  
   <include file="$(find gpd)/launch/ur5_hand_geometry.launch">
@@ -21,8 +22,7 @@
         
       <!-- What type of point cloud is used and what ROS topic it comes from -->
       <param name="cloud_type" value="0" /> <!-- 0: PointCloud2, 1: CloudSized, 2: CloudIndexed, 3: CloudSamples -->
-      <param name="cloud_topic" value="/my_gen3/combined_cloud" unless="$(arg sim)" />
-      <!-- <param name="cloud_topic" value="/combined_cloud" unless="$(arg sim)" /> -->
+      <param name="cloud_topic" value="$(eval '/' + arg('namespace') + 'combined_cloud')" unless="$(arg sim)" />
       <param name="cloud_topic" value="/cloud_pcd" if="$(arg sim)" />
     
      <!-- (optional) The ROS topic that the samples come from (default: an empty string) -->
