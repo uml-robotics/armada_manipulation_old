@@ -26,8 +26,8 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf/transform_listener.h>
 #include <std_msgs/Int8.h>
-#include <gpd/GraspConfigList.h>
-#include <gpd/GraspConfig.h>
+#include <gpd_ros/GraspConfigList.h>
+#include <gpd_ros/GraspConfig.h>
 
 typedef boost::shared_ptr<moveit::planning_interface::MoveGroupInterface> MoveGroupPtr;
 typedef boost::shared_ptr<moveit::planning_interface::PlanningSceneInterface> PlanningScenePtr;
@@ -56,7 +56,7 @@ class Manipulation
 
     //Grasp Planning Member Variables
     std::vector<GraspPose> graspPoseList;
-    gpd::GraspConfigList candidates;
+    gpd_ros::GraspConfigList candidates;
 
     //Manipulation Pose Member Variables
     std::vector<double> joint_group_positions;
@@ -86,9 +86,9 @@ class Manipulation
     void plan_and_move();
 
     //Helper Funcitons
-    void store_gpd_vals(gpd::GraspConfigList candidates);
+    void store_gpd_vals(gpd_ros::GraspConfigList candidates);
     void createPickingEEFPoseList();
-    GraspPose createPickingEEFPose(gpd::GraspConfig grasp_msg);
+    GraspPose createPickingEEFPose(gpd_ros::GraspConfig grasp_msg);
 
 };
 

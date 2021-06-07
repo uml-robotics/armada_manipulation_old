@@ -30,7 +30,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2_eigen
   tf2_geometry_msgs
-  gpd
+  gpd_ros
 )
 
 include_directories(include

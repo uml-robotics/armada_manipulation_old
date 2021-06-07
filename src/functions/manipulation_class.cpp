@@ -183,7 +183,7 @@ void Manipulation::pick_and_place(std::vector<GraspPose> graspPoseList, geometry
 // Pass variables or otherwise wrap functions together
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-void Manipulation::store_gpd_vals(gpd::GraspConfigList msg)
+void Manipulation::store_gpd_vals(gpd_ros::GraspConfigList msg)
 {
     ROS_INFO("storing gpd vals");
     candidates = msg;
@@ -202,14 +202,14 @@ void Manipulation::createPickingEEFPoseList()
     ROS_INFO("grasp pose list generated");
 }
 
-GraspPose Manipulation::createPickingEEFPose(gpd::GraspConfig grasp_msg)
+GraspPose Manipulation::createPickingEEFPose(gpd_ros::GraspConfig grasp_msg)
 {
     GraspPose thisGrasp;
     tf::Matrix3x3 rot_matrix_grasp_base(-grasp_msg.axis.x, grasp_msg.binormal.x, grasp_msg.approach.x,
                                       -grasp_msg.axis.y, grasp_msg.binormal.y, grasp_msg.approach.y,
                                       -grasp_msg.axis.z, grasp_msg.binormal.z, grasp_msg.approach.z);
 
-    tf::Vector3 tr_grasp_base(grasp_msg.bottom.x, grasp_msg.bottom.y, grasp_msg.bottom.z);
+    tf::Vector3 tr_grasp_base(grasp_msg.position.x, grasp_msg.position.y, grasp_msg.position.z);
     tf::Transform tf_grasp_base(rot_matrix_grasp_base, tr_grasp_base);
     tf::StampedTransform tf_base_odom;
 
