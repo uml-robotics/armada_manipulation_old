@@ -22,9 +22,7 @@ Grasp_Cluster::Grasp_Cluster(ros::NodeHandle nodeHandle)
     // define combined_cloud subscriber using namespace
     nodeNamespace = nodeHandle.getNamespace();
     cloudTopic = nodeNamespace + "/detect_grasps/clustered_grasps";
-    //clustered_grasps_gpd = nodeHandle.subscribe("/my_gen3/detect_grasps/clustered_grasps", 1, &Grasp_Cluster::clusteredGraspsGPDCallback, this);
     clustered_grasps_gpd = nodeHandle.subscribe(cloudTopic, 1, &Grasp_Cluster::clusteredGraspsGPDCallback, this);
-    retry = false;
 }
 
 // ********************************************************************************************
@@ -34,7 +32,7 @@ Grasp_Cluster::Grasp_Cluster(ros::NodeHandle nodeHandle)
 // When clustered_grasps message is received;
 // if program is not already processing list of grasps
 // populate class->candidates with the incoming message,
-void Grasp_Cluster::clusteredGraspsGPDCallback(gpd::GraspConfigList msg)
+void Grasp_Cluster::clusteredGraspsGPDCallback(gpd_ros::GraspConfigList msg)
 {
   if (!planning_grasp)
   {
@@ -48,7 +46,6 @@ void Grasp_Cluster::clusteredGraspsGPDCallback(gpd::GraspConfigList msg)
           planning_grasp = true;
       } else {
           ROS_INFO("retrying ...");
-          retry = true;
       }
   }
 }
@@ -58,7 +55,7 @@ void Grasp_Cluster::clusteredGraspsGPDCallback(gpd::GraspConfigList msg)
 // ********************************************************************************************
 
 // Return current grasp candidates for processing in manipulation function
-gpd::GraspConfigList Grasp_Cluster::get_grasp_candidates()
+gpd_ros::GraspConfigList Grasp_Cluster::get_grasp_candidates()
 {
     return candidates;
 }

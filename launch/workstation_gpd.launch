@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   
+<!-- this file needs to be updated to work with gpd_ros package instead of older gpd (forward branch) package -->
   <!-- Arguments -->
   <arg name="sim" default="false" />
   <arg name="namespace" default="" />

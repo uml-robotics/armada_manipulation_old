@@ -5,10 +5,7 @@
 //
 // manipulation_class function definitions
 //
-// Many of the following functions are direct or slightly modified blocks of code/functions
-// from the Moveit! tutorials page (pick and place tutorial):
-// http://docs.ros.org/en/kinetic/api/moveit_tutorials/html/doc/pick_place/pick_place_tutorial.html
-// Check out the Moveit! tutorials for more good stuff
+// Edit this later for more info...
 //
 // ********************************************************************************************
 
@@ -26,6 +23,9 @@ Manipulation::Manipulation(ros::NodeHandle nodeHandle, std::string planning_grou
     // start off by clearing the octomap in case it was previously occupied
     clearOctomap = nodeHandle.serviceClient<std_srvs::Empty>("/clear_octomap");
 
+    // instantiate publisher for gripper commands
+    this->gripper_command = nodeHandle.advertise<control_msgs::GripperCommandActionGoal>("robotiq_2f_85_gripper_controller/gripper_cmd/goal", 10);
+
     // establish all pointers
     planning_scene_ptr = PlanningScenePtr(
         new moveit::planning_interface::PlanningSceneInterface());
@@ -40,35 +40,16 @@ Manipulation::Manipulation(ros::NodeHandle nodeHandle, std::string planning_grou
 // Open and close gripper to different positions
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+
 // CLOSEVAR GRIPPER FUNCTION
 // set the gripper to somewhere between fully opened and closed
 // for robotiq_2f_85 open: 0, closed: ~0.8
-void Manipulation::setGripper(trajectory_msgs::JointTrajectory& posture, double closeVal)
+void Manipulation::setGripper(double closeVal)
 {
-    posture.joint_names.resize(2);
-    posture.joint_names[0] = "finger_joint";
-    posture.joint_names[1] = "right_outer_knuckle_joint";
-
-    // Don't let val fall above/below max/min values
-    if (closeVal >= 0.78) {
-        closeVal = 0.78;
-    } else if (closeVal <= 0.00) {
-        closeVal = 0.00;
-    }
-
-    posture.points.resize(1);
-    posture.points[0].positions.resize(2);
-    posture.points[0].positions[0] = closeVal;
-    posture.points[0].positions[1] = closeVal;
-    posture.points[0].time_from_start = ros::Duration(0.5);
+    this->gripper_cmd.goal.command.position = closeVal;
+    gripper_command.publish(gripper_cmd);
 }
 
-/*
-void Manipulation::setGripperJointPos(double closeVal)
-{
-
-}
-*/
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Manipulation Pick and Place Functions
@@ -95,18 +76,6 @@ void Manipulation::set_target_pose_from_grasps(geometry_msgs::Pose graspPosition
     target_pose.position.z = graspPositionPose.position.z;
 }
 
-void Manipulation::plan_and_move()
-{
-    move_group_ptr->setPoseTarget(target_pose);
-    move_group_ptr->setGoalPositionTolerance(0.001);
-    move_group_ptr->setGoalOrientationTolerance(0.002);
-    move_group_ptr->setPlanningTime(5.0);
-    move_group_ptr->setNumPlanningAttempts(30);
-    if(move_group_ptr->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS) {
-        move_group_ptr->move();
-    }
-}
-
 bool Manipulation::plan(geometry_msgs::Pose graspPositionPose, geometry_msgs::Pose graspOrientationPose)
 {
     ROS_INFO("planning ...");
@@ -119,6 +88,18 @@ bool Manipulation::plan(geometry_msgs::Pose graspPositionPose, geometry_msgs::Po
     move_group_ptr->setNumPlanningAttempts(30);
 
     return (move_group_ptr->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+}
+
+void Manipulation::plan_and_move()
+{
+    move_group_ptr->setPoseTarget(target_pose);
+    move_group_ptr->setGoalPositionTolerance(0.001);
+    move_group_ptr->setGoalOrientationTolerance(0.002);
+    move_group_ptr->setPlanningTime(5.0);
+    move_group_ptr->setNumPlanningAttempts(30);
+    if(move_group_ptr->plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS) {
+        move_group_ptr->move();
+    }
 }
 
 // Using helper function createPickingEEFPose graspPoses, plan and execute a picking maneuver with 3 individual movements
@@ -137,12 +118,6 @@ void Manipulation::pick(std::vector<GraspPose> graspPoseList)
             break;
         }
     }
-
-    /*
-     * All candidates failed planning
-     *
-     * do something about it here, set flag so program can loop
-     */
 }
 
 void Manipulation::executeGrasp(GraspPose graspPose)
@@ -154,6 +129,9 @@ void Manipulation::executeGrasp(GraspPose graspPose)
     set_target_pose_from_grasps(graspPose.actual, graspPose.actual);
     plan_and_move();
     ros::Duration(0.5).sleep();
+
+    setGripper(0.3);
+    ros::Duration(2.0).sleep();
 
     set_target_pose_from_grasps(graspPose.pre, graspPose.actual);
     plan_and_move();
@@ -175,7 +153,14 @@ void Manipulation::place(geometry_msgs::Pose placePose)
 void Manipulation::pick_and_place(std::vector<GraspPose> graspPoseList, geometry_msgs::Pose placePose)
 {
     pick(graspPoseList);
-    place(placePose);
+    // place(placePose);
+    // Create a function to do this later
+    move_group_ptr->setNamedTarget("retract");
+    move_group_ptr->move();
+    ros::Duration(0.5).sleep();
+
+    setGripper(0.0);
+    ros::Duration(2.0).sleep();
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -183,7 +168,7 @@ void Manipulation::pick_and_place(std::vector<GraspPose> graspPoseList, geometry
 // Pass variables or otherwise wrap functions together
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-void Manipulation::store_gpd_vals(gpd::GraspConfigList msg)
+void Manipulation::store_gpd_vals(gpd_ros::GraspConfigList msg)
 {
     ROS_INFO("storing gpd vals");
     candidates = msg;
@@ -202,14 +187,14 @@ void Manipulation::createPickingEEFPoseList()
     ROS_INFO("grasp pose list generated");
 }
 
-GraspPose Manipulation::createPickingEEFPose(gpd::GraspConfig grasp_msg)
+GraspPose Manipulation::createPickingEEFPose(gpd_ros::GraspConfig grasp_msg)
 {
     GraspPose thisGrasp;
     tf::Matrix3x3 rot_matrix_grasp_base(-grasp_msg.axis.x, grasp_msg.binormal.x, grasp_msg.approach.x,
                                       -grasp_msg.axis.y, grasp_msg.binormal.y, grasp_msg.approach.y,
                                       -grasp_msg.axis.z, grasp_msg.binormal.z, grasp_msg.approach.z);
 
-    tf::Vector3 tr_grasp_base(grasp_msg.bottom.x, grasp_msg.bottom.y, grasp_msg.bottom.z);
+    tf::Vector3 tr_grasp_base(grasp_msg.position.x, grasp_msg.position.y, grasp_msg.position.z);
     tf::Transform tf_grasp_base(rot_matrix_grasp_base, tr_grasp_base);
     tf::StampedTransform tf_base_odom;
 
@@ -221,7 +206,7 @@ GraspPose Manipulation::createPickingEEFPose(gpd::GraspConfig grasp_msg)
     }
 
     // Find grasp actual, pre and after poses
-    tf::Transform tf_grasp_odom_(tf::Quaternion(0, 0, -M_PI/4 - M_PI/16, 1), tf::Vector3(0, 0, -0.148));
+    tf::Transform tf_grasp_odom_(tf::Quaternion(0, 0, -M_PI/4 - M_PI/16, 1), tf::Vector3(0, 0, -0.09)); //0.148
     tf::Transform tf_grasp_odom = tf_base_odom * tf_grasp_base * tf_grasp_odom_;
     tf::poseTFToMsg(tf_grasp_odom, thisGrasp.actual);
 

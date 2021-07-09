@@ -12,8 +12,8 @@
 #include <iostream>
 
 #include "ros/ros.h"
-#include <gpd/GraspConfigList.h>
-#include <gpd/GraspConfig.h>
+#include <gpd_ros/GraspConfigList.h>
+#include <gpd_ros/GraspConfig.h>
 
 #include <array>
 #include <std_srvs/Empty.h>
@@ -34,7 +34,7 @@ class Grasp_Cluster
     ros::Subscriber clustered_grasps_gpd;
 
     // Functions
-    void clusteredGraspsGPDCallback(const gpd::GraspConfigList msg);
+    void clusteredGraspsGPDCallback(const gpd_ros::GraspConfigList msg);
 
   public:
 
@@ -43,8 +43,8 @@ class Grasp_Cluster
     string cloudTopic;
 
     // GPD Grasp members
-    gpd::GraspConfigList candidates;
-    gpd::GraspConfig grasp;
+    gpd_ros::GraspConfigList candidates;
+    gpd_ros::GraspConfig grasp;
     std_msgs::Float32 score;
     double numGrasps;
 
@@ -52,7 +52,7 @@ class Grasp_Cluster
     Grasp_Cluster(ros::NodeHandle nodeHandle);
 
     // Functions
-    gpd::GraspConfigList get_grasp_candidates();
+    gpd_ros::GraspConfigList get_grasp_candidates();
     void set_planning(bool val);
     void set_retry(bool val);
 

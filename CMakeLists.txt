@@ -30,7 +30,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2_eigen
   tf2_geometry_msgs
-  gpd
+  gpd_ros
 )
 
 include_directories(include
@@ -57,23 +57,12 @@ catkin_package(
   message_runtime
 )
 
-add_executable(basic_manipulation_and_2d_perception
-	src/nodes/basic_manipulation_and_2d_perception.cpp
+add_executable(pick_and_place
+	src/nodes/pick_and_place.cpp
 	src/functions/manipulation_class.cpp
         src/functions/perception_class.cpp
-        src/functions/grasp_cluster_class.cpp
-)
-
-target_link_libraries(basic_manipulation_and_2d_perception ${catkin_LIBRARIES})
-
-add_executable(basic_manipulation_and_3d_perception
-	src/nodes/basic_manipulation_and_3d_perception.cpp
-	src/functions/manipulation_class.cpp
-        src/functions/perception_class.cpp
-        src/functions/grasp_cluster_class.cpp
-)
-
-target_link_libraries(basic_manipulation_and_3d_perception ${catkin_LIBRARIES})
+        src/functions/grasp_cluster_class.cpp)
+target_link_libraries(pick_and_place ${catkin_LIBRARIES})
 
 add_executable(add_two_ints_server src/services/add_two_ints_server.cpp)
 target_link_libraries(add_two_ints_server ${catkin_LIBRARIES})

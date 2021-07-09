@@ -53,12 +53,14 @@ class Perception
   
     //Publishers & Subscribers
     ros::Publisher combined_cloud_pub;
+    ros::Subscriber base_camera_sub;
     ros::Subscriber wrist_camera_sub;
     ros::Subscriber left_camera_sub;
     ros::Subscriber right_camera_sub;
     ros::Subscriber rear_camera_sub;
 
     //Subscriber Callbacks
+    void base_camera_callback(const sensor_msgs::PointCloud2 msg);
     void wrist_camera_callback(const sensor_msgs::PointCloud2 msg);
     void left_camera_callback(const sensor_msgs::PointCloud2 msg);
     void right_camera_callback(const sensor_msgs::PointCloud2 msg);
@@ -87,13 +89,11 @@ class Perception
     PointCloud<PointXYZRGB> combined_cloud;
     PointCloud<PointXYZRGB> current_cloud;
     PointCloud<PointXYZRGB> left_cloud;
-    PointCloud<PointXYZRGB> left_cloud_snapshot;
     PointCloud<PointXYZRGB> right_cloud;
-    PointCloud<PointXYZRGB> right_cloud_snapshot;
     PointCloud<PointXYZRGB> rear_cloud;
-    PointCloud<PointXYZRGB> rear_cloud_snapshot;
     PointCloud<PointXYZRGB> wrist_cloud;
-    PointCloud<PointXYZRGB> wrist_cloud_snapshot;
+    PointCloud<PointXYZRGB> base_cloud;
+    std::vector<PointCloud<PointXYZRGB>> cloud_list;
 
     //Pointer Variables
     TransformListenerPtr transform_listener_ptr;
@@ -103,16 +103,14 @@ class Perception
 
     //Functions
     void publish_combined_cloud();
-    void concatenate_clouds();
-    void concatenate_wrist_clouds();
-    void collect_camera_snapshots();
-    void snapshot_left_pointcloud();
-    void snapshot_right_pointcloud();
-    void snapshot_rear_pointcloud();
-    void snapshot_wrist_pointcloud();
+    void concatenate_clouds(std::vector<PointCloud<PointXYZRGB>> cloud_snapshot_list);
+    std::vector<PointCloud<PointXYZRGB>> workstation_snapshot();
+    std::vector<PointCloud<PointXYZRGB>> wrist_cam_snapshots();
+    std::vector<PointCloud<PointXYZRGB>> base_cam_snapshot();
 
     //Helper Function/Function Wrappers
     void generate_workspace_pointcloud();
+    void generate_base_cam_pointcloud();
     void generate_wrist_pointcloud();
 };  
 
