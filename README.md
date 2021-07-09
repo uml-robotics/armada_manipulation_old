@@ -4,6 +4,7 @@
 - [Supported Versions](#supported-versions)
 - [Pick and Place](#pick-and-place)
   - [Setup](#setup)
+  - [Usage](#usage)
 
 # Important
 This repository only contains code used to control Moveit! configured robots (real or simulated), and should not contain any models or configurations of its own. Other packages may be required for use  
