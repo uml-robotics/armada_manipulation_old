@@ -15,6 +15,7 @@
 #include <moveit_msgs/DisplayRobotState.h>
 #include <moveit_msgs/DisplayTrajectory.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
+#include <control_msgs/GripperCommandActionGoal.h>
 #include <ros/ros.h>
 #include <geometry_msgs/Pose.h>
 #include <array>
@@ -61,6 +62,7 @@ class Manipulation
     //Manipulation Pose Member Variables
     std::vector<double> joint_group_positions;
     geometry_msgs::Pose target_pose;
+    geometry_msgs::Pose place_pose;
     geometry_msgs::Vector3 orientation;
     tf2::Quaternion q;
 
@@ -72,8 +74,13 @@ class Manipulation
     //Flag Variables
     bool pose_success;
 
+    //Grasping Member Variables
+    control_msgs::GripperCommandActionGoal gripper_cmd;
+    ros::Publisher gripper_command;
+
     //Gripper Functions
     void setGripper(trajectory_msgs::JointTrajectory& posture, double closeVal);
+    void setGripper(double closeVal);
 
     //Functions
     void pick(std::vector<GraspPose> graspPoseList);

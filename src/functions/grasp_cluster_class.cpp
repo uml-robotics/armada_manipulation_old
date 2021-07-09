@@ -22,9 +22,7 @@ Grasp_Cluster::Grasp_Cluster(ros::NodeHandle nodeHandle)
     // define combined_cloud subscriber using namespace
     nodeNamespace = nodeHandle.getNamespace();
     cloudTopic = nodeNamespace + "/detect_grasps/clustered_grasps";
-    //clustered_grasps_gpd = nodeHandle.subscribe("/my_gen3/detect_grasps/clustered_grasps", 1, &Grasp_Cluster::clusteredGraspsGPDCallback, this);
     clustered_grasps_gpd = nodeHandle.subscribe(cloudTopic, 1, &Grasp_Cluster::clusteredGraspsGPDCallback, this);
-    retry = false;
 }
 
 // ********************************************************************************************
@@ -48,7 +46,6 @@ void Grasp_Cluster::clusteredGraspsGPDCallback(gpd_ros::GraspConfigList msg)
           planning_grasp = true;
       } else {
           ROS_INFO("retrying ...");
-          retry = true;
       }
   }
 }
