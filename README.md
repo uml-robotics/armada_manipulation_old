@@ -28,4 +28,6 @@ rosrun gazebo_ros spawn_model -file ~/.gazebo/models/coke_can/model.sdf -sdf -z 
 You can locate your .gazebo folder (hidden folder if you use the file manager) and create a models folder if one does not already exist. Model files can be cloned from the following repository:
 [osrf/gazebo_models](https://github.com/osrf/gazebo_models)
 
-I like to use the coke_can because it is easy for the robotiq_2f_85 gripper to grab
+The coke_can because it is easy for the robotiq_2f_85 gripper to grab
+
+This README will be revised and reuploaded soon once more testing has been completed and a few tweaks to workflow implemented.
