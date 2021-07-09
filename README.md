@@ -5,6 +5,7 @@
 - [Pick and Place](#pick-and-place)
   - [Setup](#setup)
   - [Usage](#usage)
+- [Additional Resources](#additional-resources)
 
 # Important
 This repository only contains code used to control Moveit! configured robots (real or simulated), and should not contain any models or configurations of its own. Other packages may be required for use  
@@ -44,5 +45,6 @@ rosrun gazebo_ros spawn_model -file ~/.gazebo/models/coke_can/model.sdf -sdf -z 
 [osrf/gazebo_models](https://github.com/osrf/gazebo_models)  
 - The coke_can is easy for the robotiq_2f_85 gripper to grab  
 
+# Additional Resources
 Any additional packages (such as the ur_e_gazebo package from the uml-robotics/universal_robot repository used in the example above) can be acquired by following the links provided in my other package. Please read through the readme, this hyperlink will take you to the section detailing integrated/connected packages along with instructions for usage.  
 [uml-robotics/uml_hri_nerve_armada_workstation#integrated_packages](https://github.com/uml-robotics/uml_hri_nerve_armada_workstation#integrated-packages)  
