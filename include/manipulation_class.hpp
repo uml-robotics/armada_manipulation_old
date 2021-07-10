@@ -7,6 +7,9 @@
 #ifndef MANIPULATION_CLASS_HPP
 #define MANIPULATION_CLASS_HPP
 
+#include <cstring>
+#include <ctime>
+#include <iostream>
 #include <boost/filesystem.hpp>
 #include <math.h>
 #include <stdlib.h>
@@ -30,6 +33,8 @@
 #include <gpd_ros/GraspConfigList.h>
 #include <gpd_ros/GraspConfig.h>
 
+using namespace std;
+
 typedef boost::shared_ptr<moveit::planning_interface::MoveGroupInterface> MoveGroupPtr;
 typedef boost::shared_ptr<moveit::planning_interface::PlanningSceneInterface> PlanningScenePtr;
 typedef boost::shared_ptr<tf::TransformListener> TransformListenerPtr;
@@ -50,6 +55,10 @@ class Manipulation
     //Ros Service Member Variables
     ros::ServiceClient clearOctomap;
     std_srvs::Empty srv;
+
+    //Node Member Variables
+    string nodeNamespace;
+    string gripperTopic;
 
     //Moveit! Member Variables
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;

@@ -21,7 +21,7 @@ Grasp_Cluster::Grasp_Cluster(ros::NodeHandle nodeHandle)
 
     // define combined_cloud subscriber using namespace
     nodeNamespace = nodeHandle.getNamespace();
-    cloudTopic = nodeNamespace + "/detect_grasps/clustered_grasps";
+    cloudTopic = "/detect_grasps/clustered_grasps";     // nodeNamespace + "/detect_grasps/clustered_grasps";
     clustered_grasps_gpd = nodeHandle.subscribe(cloudTopic, 1, &Grasp_Cluster::clusteredGraspsGPDCallback, this);
 }
 

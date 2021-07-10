@@ -24,7 +24,9 @@ Manipulation::Manipulation(ros::NodeHandle nodeHandle, std::string planning_grou
     clearOctomap = nodeHandle.serviceClient<std_srvs::Empty>("/clear_octomap");
 
     // instantiate publisher for gripper commands
-    this->gripper_command = nodeHandle.advertise<control_msgs::GripperCommandActionGoal>("robotiq_2f_85_gripper_controller/gripper_cmd/goal", 10);
+    nodeNamespace = nodeHandle.getNamespace();
+    gripperTopic = nodeNamespace + "robotiq_2f_85_gripper_controller/gripper_cmd/goal";
+    this->gripper_command = nodeHandle.advertise<control_msgs::GripperCommandActionGoal>(gripperTopic, 10);
 
     // establish all pointers
     planning_scene_ptr = PlanningScenePtr(
