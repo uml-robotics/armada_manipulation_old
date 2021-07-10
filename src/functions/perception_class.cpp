@@ -285,20 +285,23 @@ void Perception::concatenate_clouds(std::vector<PointCloud<PointXYZRGB>> cloud_s
   PassThrough<PointXYZRGB> pass_w;
   pass_w.setInputCloud (temp_cloud);
   pass_w.setFilterFieldName ("x");
-  pass_w.setFilterLimits (-0.6, 0.6);
+  pass_w.setFilterLimits (-0.575, 0.575);
   pass_w.filter(*temp_cloud);
 
   PassThrough<PointXYZRGB> pass_y;
   pass_y.setInputCloud (temp_cloud);
   pass_y.setFilterFieldName ("y");
-  pass_y.setFilterLimits (-0.45, 0.45);
+  pass_y.setFilterLimits (-0.425, 0.425);
   pass_y.filter(*temp_cloud);
   
   PassThrough<PointXYZRGB> pass_z;
   pass_z.setInputCloud (temp_cloud);
   pass_z.setFilterFieldName ("z");
-  pass_z.setFilterLimits (0.8, 1.2);
+  pass_z.setFilterLimits (0.8, 1.3);
   pass_z.filter(*temp_cloud);
+
+  // segment out the table surface before saving to member
+  sac_segmentation(temp_cloud);
 
   this->combined_cloud = *temp_cloud;
 }
@@ -346,9 +349,11 @@ PointCloud<PointXYZRGB> Perception::voxelgrid_filter(PointCloud<PointXYZRGB>::Pt
 
 // SAC (PLANAR) SEGMENTATION FUNCTION
 // remove largest planar surface from pointcloud
-PointCloud<PointXYZRGB> Perception::sac_segmentation(PointCloud<PointXYZRGB>::Ptr cloud, PointIndices::Ptr inliers_plane)
+PointCloud<PointXYZRGB> Perception::sac_segmentation(PointCloud<PointXYZRGB>::Ptr cloud)
 {
   // Create the segmentation object
+  ModelCoefficients::Ptr coefficients_plane (new ModelCoefficients);
+  pcl::PointIndices::Ptr inliers_plane (new pcl::PointIndices);
   SACSegmentation<PointXYZRGB> seg;
   seg.setOptimizeCoefficients (true);
   seg.setModelType (SACMODEL_PLANE);
@@ -356,7 +361,6 @@ PointCloud<PointXYZRGB> Perception::sac_segmentation(PointCloud<PointXYZRGB>::Pt
   seg.setMaxIterations (1000);
   seg.setDistanceThreshold (0.01);
   seg.setInputCloud (cloud);
-  ModelCoefficients::Ptr coefficients_plane (new ModelCoefficients);
   seg.segment (*inliers_plane, *coefficients_plane);
 
   // Create the filtering object

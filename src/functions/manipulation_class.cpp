@@ -206,11 +206,34 @@ GraspPose Manipulation::createPickingEEFPose(gpd_ros::GraspConfig grasp_msg)
     }
 
     // Find grasp actual, pre and after poses
-    tf::Transform tf_grasp_odom_(tf::Quaternion(0, 0, -M_PI/4 - M_PI/16, 1), tf::Vector3(0, 0, -0.09)); //0.148
+    //
+    // TODO: TWEAK THE VALUE ON LINE 219: the grasp offset along the z axis (distance from the object centerpoint) from the tooling mounting point to the actual grasping
+    //    centerpoint; ie. the expected center of the fingerpad
+    //
+    // This value should effectively be the distance from the end of the robot's arm (the place where the gripper and other hardware is mounted to on the robot) and the point
+    //    where the center of the object will be once the robot grasps it. The value will technically change depending on the object grasped so that will be developed further
+    //    in the future with a function that considers the distance from the wrist to the center of the finger pads as a function of how closed the fingers are. This is only
+    //    a need because the robotiq_2f_85 which we are currently using is not a "true" parallel gripper and the wider the object, the closer the finger pads are to the palm
+    //
+    // This value can remain static afer some tweaking for the time being since we need a general value and not perfect optomization immediately
+    double grasp_point_dist = 0.095;
+
+    tf::Transform tf_grasp_odom_(tf::Quaternion(0, 0, -M_PI/4 - M_PI/16, 1), tf::Vector3(0, 0, -grasp_point_dist));
     tf::Transform tf_grasp_odom = tf_base_odom * tf_grasp_base * tf_grasp_odom_;
     tf::poseTFToMsg(tf_grasp_odom, thisGrasp.actual);
 
-    tf::Transform tf_pregrasp_odom_(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, -0.08));
+    // TODO: TWEAK THE VALUE ON LINE 234: the pregrasp offset along the z axis (distance from actual grasp position)
+    //
+    // This value should be the distance from the actual grasp point along the z axis (relative to the gripper, so backward away from the object) that the gripper is told
+    //    to use as a setpoint before grasping the object in order to be able to safely approach from outside the immediate object workspace.
+    //    Due to current workflow, this value is also used as the "after" grasp, meaning the position that the robot brings the gripper to both enter and exit the immediate
+    //    area surrounding the object we wish to grasp is the same both before and after the grasp.
+    //
+    // This value can also remain static after some tweaking, in the same way as the previous value this will actually depend more on other variables such as how many objects
+    //    are in the scene, are there obstacles, etc.
+    double pregrasp_offset_dist = 0.10;
+
+    tf::Transform tf_pregrasp_odom_(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, -pregrasp_offset_dist));
     tf::Transform tf_pregrasp_odom = tf_grasp_odom * tf_pregrasp_odom_;
     tf::poseTFToMsg(tf_pregrasp_odom, thisGrasp.pre);
 

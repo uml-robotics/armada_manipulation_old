@@ -68,7 +68,7 @@ class Perception
 
     //Functions
     PointCloud<PointXYZRGB> voxelgrid_filter(PointCloud<PointXYZRGB>::Ptr cloud);
-    PointCloud<PointXYZRGB> sac_segmentation(PointCloud<PointXYZRGB>::Ptr cloud, PointIndices::Ptr inliers_plane);
+    PointCloud<PointXYZRGB> sac_segmentation(PointCloud<PointXYZRGB>::Ptr cloud);
     PointCloud<PointNormal> move_least_squares(PointCloud<PointXYZRGB>::Ptr cloud);
     void computeNormals(PointCloud<PointXYZRGB>::Ptr cloud, PointCloud<Normal>::Ptr cloud_normals);
     void extractNormals(PointCloud<Normal>::Ptr cloud_normals, PointIndices::Ptr inliers_plane);
