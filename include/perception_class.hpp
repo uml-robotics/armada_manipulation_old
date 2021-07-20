@@ -53,6 +53,7 @@ class Perception
   
     //Publishers & Subscribers
     ros::Publisher combined_cloud_pub;
+    ros::Subscriber camera_sub;
     ros::Subscriber base_camera_sub;
     ros::Subscriber wrist_camera_sub;
     ros::Subscriber left_camera_sub;
@@ -60,13 +61,14 @@ class Perception
     ros::Subscriber rear_camera_sub;
 
     //Subscriber Callbacks
+    void camera_callback(const sensor_msgs::PointCloud2 msg);
     void base_camera_callback(const sensor_msgs::PointCloud2 msg);
     void wrist_camera_callback(const sensor_msgs::PointCloud2 msg);
     void left_camera_callback(const sensor_msgs::PointCloud2 msg);
     void right_camera_callback(const sensor_msgs::PointCloud2 msg);
     void rear_camera_callback(const sensor_msgs::PointCloud2 msg);
 
-    //Functions
+    //Generic PCL Filters
     PointCloud<PointXYZRGB> voxelgrid_filter(PointCloud<PointXYZRGB>::Ptr cloud);
     PointCloud<PointXYZRGB> sac_segmentation(PointCloud<PointXYZRGB>::Ptr cloud);
     PointCloud<PointNormal> move_least_squares(PointCloud<PointXYZRGB>::Ptr cloud);
@@ -79,20 +81,18 @@ class Perception
     Perception(ros::NodeHandle nodeHandle);
 
     //Subscriber initializer
-    void init_subscriber(ros::NodeHandle nodeHandle);
+    void init_subscriber(ros::NodeHandle nodeHandle, string camera_name);
 
     //Node Member Variables
     string nodeNamespace;
+
+    // Topic Name Member Variables
+    std::vector<string> camera_names;
     string gpdTopic;
 
     //Pointcloud Member Variables
     PointCloud<PointXYZRGB> combined_cloud;
     PointCloud<PointXYZRGB> current_cloud;
-    PointCloud<PointXYZRGB> left_cloud;
-    PointCloud<PointXYZRGB> right_cloud;
-    PointCloud<PointXYZRGB> rear_cloud;
-    PointCloud<PointXYZRGB> wrist_cloud;
-    PointCloud<PointXYZRGB> base_cloud;
     std::vector<PointCloud<PointXYZRGB>> cloud_list;
 
     //Pointer Variables
@@ -103,15 +103,11 @@ class Perception
 
     //Functions
     void publish_combined_cloud();
-    void concatenate_clouds(std::vector<PointCloud<PointXYZRGB>> cloud_snapshot_list);
-    std::vector<PointCloud<PointXYZRGB>> workstation_snapshot();
-    std::vector<PointCloud<PointXYZRGB>> wrist_cam_snapshots();
-    std::vector<PointCloud<PointXYZRGB>> base_cam_snapshot();
+    void concatenate_clouds(std::vector<PointCloud<PointXYZRGB>> cloud_snapshot_list, bool save_pcd);
+    void workstation_snapshot(ros::NodeHandle nodeHandle);
 
     //Helper Function/Function Wrappers
-    void generate_workspace_pointcloud();
-    void generate_base_cam_pointcloud();
-    void generate_wrist_pointcloud();
+    void generate_workspace_pointcloud(ros::NodeHandle nodeHandle);
 };  
 
 #endif // PERCEPTION_CLASS

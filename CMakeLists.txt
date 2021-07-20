@@ -61,6 +61,7 @@ add_executable(pick_and_place
 	src/nodes/pick_and_place.cpp
 	src/functions/manipulation_class.cpp
         src/functions/perception_class.cpp
+        src/functions/pointcloud_filters.cpp
         src/functions/grasp_cluster_class.cpp)
 target_link_libraries(pick_and_place ${catkin_LIBRARIES})
 

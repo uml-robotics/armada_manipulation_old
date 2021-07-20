@@ -16,8 +16,8 @@ int main(int argc, char** argv)
 {
   // Initialize node & check for planning_group arg
   ros::init(argc,argv,"pick_and_place_node");
-  if (argc != 3) {
-    ROS_INFO("Usage: pick_and_place <planning_group> <camera_type>");
+  if (argc < 3) {
+    ROS_INFO("Usage: pick_and_place <planning_group> <camera_topic_1> <camera_topic_2> ... <camera_topic_n>");
     return 1;
   }
   ros::NodeHandle nh;
@@ -30,6 +30,12 @@ int main(int argc, char** argv)
   Manipulation manipulation(nh, planning_group);
   Perception perception(nh);
   Grasp_Cluster grasp_cluster(nh);
+
+  // Generate a list of camera topics for perception object to iterate through for concatenating a dynamic number of clouds
+  for (int i = 2; i < argc; ++i) {
+    perception.camera_names.push_back(argv[i]);
+    ROS_INFO("Camera Topic %d: %s", i, argv[i]);
+  }
   
   manipulation.move_group_ptr->setPlanningTime(15.0);
   manipulation.move_group_ptr->setMaxVelocityScalingFactor(0.25);
@@ -42,27 +48,12 @@ int main(int argc, char** argv)
   while(ros::ok())
   {
       // take snapshot and publish resulting concatenated pointcloud
-      // check whether to use wrist or workstation cameras
-      if (!strcmp(argv[2], "wrist")) {
-          perception.generate_wrist_pointcloud();
-      }
-      else if (!strcmp(argv[2], "workstation")){
-          perception.generate_workspace_pointcloud();
-      }
-      else if (!strcmp(argv[2], "base")){
-          perception.generate_base_cam_pointcloud();
-      }
-      else {
-          ROS_INFO("<camera_type> should be either wrist, workstation or base");
-          ROS_INFO("Please ensure you entered the correct value for your device(s)");
-          return 1;
-      }
-
-      ros::Duration(5.0).sleep();
+      perception.generate_workspace_pointcloud(nh);
+      ros::Duration(1.0).sleep();
 
       while (!grasp_cluster.planning_grasp && ros::ok()) {
-          ros::Duration(5.0).sleep();
-          perception.generate_workspace_pointcloud();
+          perception.generate_workspace_pointcloud(nh);
+          ros::Duration(1.0).sleep();
       }
 
       // Store grasp pose values and create a list of picking poses
