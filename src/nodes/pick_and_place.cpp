@@ -34,7 +34,7 @@ int main(int argc, char** argv)
   // Generate a list of camera topics for perception object to iterate through for concatenating a dynamic number of clouds
   for (int i = 2; i < argc; ++i) {
     perception.camera_names.push_back(argv[i]);
-    ROS_INFO("Camera Topic %d: %s", i, argv[i]);
+    ROS_INFO("Camera Topic %d: %s", i-2, argv[i]);
   }
   
   manipulation.move_group_ptr->setPlanningTime(15.0);
