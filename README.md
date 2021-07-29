@@ -37,7 +37,7 @@ rosrun uml_hri_nerve_pick_and_place pick_and_place manipulator workstation
 
 - In the third terminal spawn an object into gazebo using a command such as (if you don't get this in before the first scan it's okay, the code will loop):  
 ```
-rosrun gazebo_ros spawn_model -file ~/.gazebo/models/coke_can/model.sdf -sdf -z 1.2 -model soda
+rosrun gazebo_ros spawn_model -file ~/.gazebo/gazebo_models/coke_can/model.sdf -sdf -z 1.2 -model soda
 ```
 
 - You can locate your .gazebo folder (hidden folder if you use the file manager) and create a models folder if one does not already exist  
