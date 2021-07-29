@@ -37,18 +37,18 @@ include_directories(include
   ${catkin_INCLUDE_DIRS}
 )
 
-add_message_files(
-  FILES
-  Num.msg
-)
+#add_message_files(
+#  FILES
+#)
 
 add_service_files(
   FILES
-  AddTwoInts.srv
+  CapturePointCloud.srv
 )
 
 generate_messages(
   DEPENDENCIES
+  sensor_msgs
   std_msgs
 )
 
@@ -65,10 +65,10 @@ add_executable(pick_and_place
         src/functions/grasp_cluster_class.cpp)
 target_link_libraries(pick_and_place ${catkin_LIBRARIES})
 
-add_executable(add_two_ints_server src/services/add_two_ints_server.cpp)
-target_link_libraries(add_two_ints_server ${catkin_LIBRARIES})
-add_dependencies(add_two_ints_server uml_hri_nerve_pick_and_place_gencpp)
+add_executable(capture_pointcloud_service src/services/capture_pointcloud_service.cpp)
+target_link_libraries(capture_pointcloud_service ${catkin_LIBRARIES})
+add_dependencies(capture_pointcloud_service uml_hri_nerve_pick_and_place_gencpp)
 
-add_executable(add_two_ints_client src/nodes/add_two_ints_client.cpp)
-target_link_libraries(add_two_ints_client ${catkin_LIBRARIES})
-add_dependencies(add_two_ints_client uml_hri_nerve_pick_and_place_gencpp)
+#add_executable(add_two_ints_client src/nodes/add_two_ints_client.cpp)
+#target_link_libraries(add_two_ints_client ${catkin_LIBRARIES})
+#add_dependencies(add_two_ints_client uml_hri_nerve_pick_and_place_gencpp)
