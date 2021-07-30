@@ -123,6 +123,7 @@ void Perception::workstation_snapshot(ros::NodeHandle nodeHandle) {
   for (int i = 0; i < cameraCount; ++i) {
     string camera_name = camera_names[i];
     init_subscriber(nodeHandle, camera_names[i]);
+    ros::Duration(2.0).sleep();
   }
 }
 
