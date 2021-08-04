@@ -25,8 +25,8 @@ Manipulation::Manipulation(ros::NodeHandle nodeHandle, std::string planning_grou
 
     // instantiate publisher for gripper commands
     nodeNamespace = nodeHandle.getNamespace();
-    gripperTopic = nodeNamespace + "robotiq_2f_85_gripper_controller/gripper_cmd/goal";
-    this->gripper_command = nodeHandle.advertise<control_msgs::GripperCommandActionGoal>(gripperTopic, 10);
+    gripperTopic = "/j2s7s300_gripper/gripper_command/goal";
+    gripper_command = nodeHandle.advertise<control_msgs::GripperCommandActionGoal>(gripperTopic, 1);
 
     // establish all pointers
     planning_scene_ptr = PlanningScenePtr(
@@ -48,7 +48,7 @@ Manipulation::Manipulation(ros::NodeHandle nodeHandle, std::string planning_grou
 // for robotiq_2f_85 open: 0, closed: ~0.8
 void Manipulation::setGripper(double closeVal)
 {
-    this->gripper_cmd.goal.command.position = closeVal;
+    gripper_cmd.goal.command.position = closeVal;
     gripper_command.publish(gripper_cmd);
 }
 
@@ -132,8 +132,8 @@ void Manipulation::executeGrasp(GraspPose graspPose)
     plan_and_move();
     ros::Duration(0.5).sleep();
 
-    setGripper(0.3);
-    ros::Duration(2.0).sleep();
+    setGripper(1.2);
+    ros::Duration(1.0).sleep();
 
     set_target_pose_from_grasps(graspPose.pre, graspPose.actual);
     plan_and_move();
@@ -157,7 +157,7 @@ void Manipulation::pick_and_place(std::vector<GraspPose> graspPoseList, geometry
     pick(graspPoseList);
     // place(placePose);
     // Create a function to do this later
-    move_group_ptr->setNamedTarget("retract");
+    move_group_ptr->setNamedTarget("Home");
     move_group_ptr->move();
     ros::Duration(0.5).sleep();
 

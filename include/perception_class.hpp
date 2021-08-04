@@ -99,7 +99,7 @@ class Perception
     TransformListenerPtr transform_listener_ptr;
 
     //Flag Variables
-    bool points_not_found;
+    bool pointcloud_found;
 
     //Functions
     void publish_combined_cloud();
