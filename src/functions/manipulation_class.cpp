@@ -132,7 +132,8 @@ void Manipulation::executeGrasp(GraspPose graspPose)
     plan_and_move();
     ros::Duration(0.5).sleep();
 
-    setGripper(1.2);
+    // dn't close gripper for now until it is in planning
+    setGripper(0.0);
     ros::Duration(1.0).sleep();
 
     set_target_pose_from_grasps(graspPose.pre, graspPose.actual);
@@ -218,7 +219,7 @@ GraspPose Manipulation::createPickingEEFPose(gpd_ros::GraspConfig grasp_msg)
     //    a need because the robotiq_2f_85 which we are currently using is not a "true" parallel gripper and the wider the object, the closer the finger pads are to the palm
     //
     // This value can remain static afer some tweaking for the time being since we need a general value and not perfect optomization immediately
-    double grasp_point_dist = 0.095;
+    double grasp_point_dist = 0.0;
 
     tf::Transform tf_grasp_odom_(tf::Quaternion(0, 0, -M_PI/4 - M_PI/16, 1), tf::Vector3(0, 0, -grasp_point_dist));
     tf::Transform tf_grasp_odom = tf_base_odom * tf_grasp_base * tf_grasp_odom_;

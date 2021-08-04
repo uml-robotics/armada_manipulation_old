@@ -38,7 +38,8 @@ int main(int argc, char** argv)
   }
   
   manipulation.move_group_ptr->setPlanningTime(15.0);
-  manipulation.move_group_ptr->setMaxVelocityScalingFactor(0.25);
+  // robot at full speed, be careful
+  manipulation.move_group_ptr->setMaxVelocityScalingFactor(0.75);
   manipulation.move_group_ptr->setPlannerId("RRTConnect");
   manipulation.move_group_ptr->setNamedTarget("Home");         // preset_1 retract
   manipulation.move_group_ptr->move();

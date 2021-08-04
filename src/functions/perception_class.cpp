@@ -33,7 +33,6 @@ void Perception::init_subscriber(ros::NodeHandle nodeHandle, string camera_name)
   string camera_topic = "/filtered_points";
   //string camera_topic = "/" + camera_name + "/depth_registered/points";
   camera_sub = nodeHandle.subscribe(camera_topic, 1, &Perception::camera_callback, this);
-  ROS_INFO_STREAM("subscribing to: " << camera_topic);
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
