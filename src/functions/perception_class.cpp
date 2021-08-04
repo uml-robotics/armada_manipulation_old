@@ -20,7 +20,7 @@ Perception::Perception(ros::NodeHandle nodeHandle)
   nodeNamespace = nodeHandle.getNamespace();
   gpdTopic = nodeNamespace + "/combined_cloud";
   combined_cloud_pub = nodeHandle.advertise<sensor_msgs::PointCloud2>(gpdTopic, 1);
-  points_not_found = true;
+  pointcloud_found = false;
 
   transform_listener_ptr = TransformListenerPtr(
         new tf::TransformListener());
@@ -30,8 +30,10 @@ Perception::Perception(ros::NodeHandle nodeHandle)
 // Seperate constructor for initialization of subscriber due to passing shared pointers as arguments before creating them
 void Perception::init_subscriber(ros::NodeHandle nodeHandle, string camera_name)
 {
-  string camera_topic = "/" + camera_name + "/depth/points";
+  string camera_topic = "/filtered_points";
+  //string camera_topic = "/" + camera_name + "/depth_registered/points";
   camera_sub = nodeHandle.subscribe(camera_topic, 1, &Perception::camera_callback, this);
+  ROS_INFO_STREAM("subscribing to: " << camera_topic);
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -45,7 +47,7 @@ void Perception::init_subscriber(ros::NodeHandle nodeHandle, string camera_name)
 // GENERIC CAMERA CALLBACK FUNCTION
 void Perception::camera_callback(const sensor_msgs::PointCloud2 msg)
 {
-  //
+  ROS_INFO("pointcloud calback");
   PointCloud<PointXYZRGB> temp_cloud;
   fromROSMsg(msg, temp_cloud);
 
@@ -69,6 +71,9 @@ void Perception::camera_callback(const sensor_msgs::PointCloud2 msg)
 
   // push this temporary cloud into the list of transformed clouds to allow for dynamic number of cameras to be subscribed to
   cloud_list.push_back(current_cloud);
+  ROS_INFO("cloud captured, setting flag");
+
+  pointcloud_found = true;
 
   // shut down the subscriber after message was received to allow a new subscriber to be generated and stop receiving messages
   camera_sub.shutdown();
@@ -101,6 +106,8 @@ void Perception::generate_workspace_pointcloud(ros::NodeHandle nodeHandle)
   workstation_snapshot(nodeHandle);
   ros::Duration(0.5).sleep();
 
+  int cloud_size = cloud_list.size();
+  ROS_INFO("cloud list size: %d", cloud_size);
   concatenate_clouds(cloud_list, false);
   ros::Duration(0.5).sleep();
 
@@ -121,9 +128,13 @@ void Perception::workstation_snapshot(ros::NodeHandle nodeHandle) {
 
   int cameraCount = camera_names.size();
   for (int i = 0; i < cameraCount; ++i) {
+    pointcloud_found = false;
     string camera_name = camera_names[i];
     init_subscriber(nodeHandle, camera_names[i]);
-    ros::Duration(2.0).sleep();
+    ROS_INFO_STREAM("initialized subscriber for: " << camera_name);
+    while(!pointcloud_found && ros::ok()) {
+      // do nothing and wait
+    }
   }
 }
 
@@ -142,9 +153,11 @@ void Perception::concatenate_clouds(std::vector<PointCloud<PointXYZRGB>> cloud_s
   PointCloud<PointXYZRGB>::Ptr temp_cloud(new PointCloud<PointXYZRGB>);
 
   *temp_cloud = cloud_snapshot_list[0];
+  ROS_INFO("1");
 
   int j = cloud_snapshot_list.size();
   if (j>1) {
+    ROS_INFO("2");
     for (int i = 1; i < j; i++) {
         *temp_cloud+= cloud_snapshot_list[i];
     }
