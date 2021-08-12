@@ -8,51 +8,75 @@
 
 #include "perception_class.hpp"
 
-// ********************************************************************************************
-// Constructors
-// Create instance of Perception class and instantiate publisher for combined cloud
-// and subscriber for pointcloud from wrist camera sensor
-// ********************************************************************************************
-
 // PERCEPTION CLASS CONSTRUCTOR
 Perception::Perception(ros::NodeHandle nodeHandle)
 {
-  nodeNamespace = nodeHandle.getNamespace();
-  gpdTopic = nodeNamespace + "/combined_cloud";
+  string nodeNamespace = nodeHandle.getNamespace();
+  string gpdTopic = nodeNamespace + "/combined_cloud";
   combined_cloud_pub = nodeHandle.advertise<sensor_msgs::PointCloud2>(gpdTopic, 1);
-  points_not_found = true;
 
   transform_listener_ptr = TransformListenerPtr(
         new tf::TransformListener());
+
+  // Retrieve list of camera names from ros parameter
+  camera_names.resize(0);
+  nodeHandle.getParam("/camera_names", camera_names);
+  camera_count = camera_names.size();
 }
 
 // INITIALIZE SUBSCRIBER FUNCTION
 // Seperate constructor for initialization of subscriber due to passing shared pointers as arguments before creating them
-void Perception::init_subscriber(ros::NodeHandle nodeHandle, string camera_name)
+void Perception::initSubscriber(ros::NodeHandle nodeHandle, string camera_name)
 {
   string camera_topic = "/" + camera_name + "/depth/points";
-  camera_sub = nodeHandle.subscribe(camera_topic, 1, &Perception::camera_callback, this);
+  camera_sub = nodeHandle.subscribe(camera_topic, 1, &Perception::cameraCallback, this);
+  cloud_stored = false;
 }
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Camera Callback Function
-// convert pointclouds from sensor_msgs::PointCloud2 to pcl::PointXYZRGB
-// transform pointclouds into world frame for use
-// store pointcloud in cloud list for concatenation
-// shutdown the subscriber to stop further callbacks and allow a new subscriber to be built
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 // GENERIC CAMERA CALLBACK FUNCTION
-void Perception::camera_callback(const sensor_msgs::PointCloud2 msg)
+void Perception::cameraCallback(const sensor_msgs::PointCloud2 msg)
 {
-  //
+  if (!cloud_stored){
+    current_cloud = msg;
+    cloud_stored = true;
+  }
+}
+
+// PUBLISH COMBINED CLOUD FUNCTION
+void Perception::publishCombinedCloud(PointCloud<PointXYZRGB> input_cloud)
+{
+  sensor_msgs::PointCloud2 cloud;
+  toROSMsg(input_cloud, cloud);
+
+  combined_cloud_pub.publish(cloud);
+}
+
+// TAKE SNAPSHOT AND CONCATENATE IMAGES THEN PUBLISH
+void Perception::generateWorkspacePointCloud(ros::NodeHandle nodeHandle)
+{
+  workstationSnapshot(nodeHandle);
+  publishCombinedCloud(concatenateClouds(cloud_list));
+}
+
+// TAKE CAMERA SNAPSHOTS FUNCTION
+void Perception::workstationSnapshot(ros::NodeHandle nodeHandle) {
+  cloud_list.resize(0);
+
+  for (int i = 0; i < camera_count; ++i) {
+    initSubscriber(nodeHandle, camera_names[i].c_str());
+    ros::Duration(1.0).sleep();
+    cloud_list.push_back(transformCloud(current_cloud));
+  }
+}
+
+PointCloud<PointXYZRGB> Perception::transformCloud(sensor_msgs::PointCloud2 cloud){
   PointCloud<PointXYZRGB> temp_cloud;
-  fromROSMsg(msg, temp_cloud);
+  fromROSMsg(cloud, temp_cloud);
 
   ros::Time stamp = ros::Time(0);
   tf::StampedTransform transform;
 
-  pcl_conversions::toPCL(stamp, current_cloud.header.stamp);
+  pcl_conversions::toPCL(stamp, temp_cloud.header.stamp);
 
   // wait for and then apply transform
   try
@@ -65,78 +89,13 @@ void Perception::camera_callback(const sensor_msgs::PointCloud2 msg)
   }
 
   // transform the cloud to the world frame but use the same pointcloud object
-  pcl_ros::transformPointCloud("world", temp_cloud, current_cloud, *transform_listener_ptr);
+  pcl_ros::transformPointCloud("world", temp_cloud, temp_cloud, *transform_listener_ptr);
 
-  // push this temporary cloud into the list of transformed clouds to allow for dynamic number of cameras to be subscribed to
-  cloud_list.push_back(current_cloud);
-
-  // shut down the subscriber after message was received to allow a new subscriber to be generated and stop receiving messages
-  camera_sub.shutdown();
+  return temp_cloud;
 }
-
-// ********************************************************************************************
-// Combined cloud publisher function
-// Publish combined (concatenated) point cloud
-// Convert combined_cloud (pcl::PointXYZRGB) to sensor_msgs::PointCloud2
-//  and then publish
-// ********************************************************************************************
-
-// PUBLISH COMBINED CLOUD FUNCTION
-void Perception::publish_combined_cloud()
-{
-  sensor_msgs::PointCloud2 cloud;
-  toROSMsg(combined_cloud, cloud);
-
-  combined_cloud_pub.publish(cloud);
-}
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Perception Helper Functions
-// function wrappers for cleaner code
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-// TAKE SNAPSHOT AND CONCATENATE IMAGES THEN PUBLISH
-void Perception::generate_workspace_pointcloud(ros::NodeHandle nodeHandle)
-{
-  workstation_snapshot(nodeHandle);
-  ros::Duration(0.5).sleep();
-
-  concatenate_clouds(cloud_list, false);
-  ros::Duration(0.5).sleep();
-
-  publish_combined_cloud();
-  ros::Duration(0.5).sleep();
-}
-
-// ********************************************************************************************
-// Capture pointcloud functions
-// take pointcloud snapshots; save camera pointclouds from camera messages to
-//   variables for concatenation
-// ********************************************************************************************
-
-// TAKE CAMERA SNAPSHOTS FUNCTION
-void Perception::workstation_snapshot(ros::NodeHandle nodeHandle) {
-  cloud_list.clear();
-  cloud_list.resize(0);
-
-  int cameraCount = camera_names.size();
-  for (int i = 0; i < cameraCount; ++i) {
-    string camera_name = camera_names[i];
-    init_subscriber(nodeHandle, camera_names[i]);
-  }
-}
-
-// ********************************************************************************************
-// Cloud concatenation function
-//
-// concatenates the points of all the cloud members into the combined pointcloud
-//    then performs downsampling (voxel_filter) and noise reduction (move_least_squares)
-//    to clean up resulting published pointcloud
-//
-// ********************************************************************************************
 
 // CONCATENATE CLOUDS FUNCTION
-void Perception::concatenate_clouds(std::vector<PointCloud<PointXYZRGB>> cloud_snapshot_list, bool save_pcd)
+PointCloud<PointXYZRGB> Perception::concatenateClouds(std::vector<PointCloud<PointXYZRGB>> cloud_snapshot_list)
 {
   PointCloud<PointXYZRGB>::Ptr temp_cloud(new PointCloud<PointXYZRGB>);
 
@@ -168,15 +127,16 @@ void Perception::concatenate_clouds(std::vector<PointCloud<PointXYZRGB>> cloud_s
   pass_z.setFilterLimits (0.8, 1.3);
   pass_z.filter(*temp_cloud);
 
-  // segment out the table surface before saving to member
   sac_segmentation(temp_cloud);
 
-  // save the pointcloud to disk
-  // probably don't use this in its current state, would make huge files
-  if (save_pcd){
-    // save pointcloud file (.pcd) to a folder called pcd in your home directory
-    pcl::io::savePCDFileASCII("~/pcd/concatenated_cloud_sample.pcd", *temp_cloud);
-  }
+  return *temp_cloud;
+}
 
-  combined_cloud = *temp_cloud;
+void savePointCloudToDisk(PointCloud<PointXYZRGB> cloud, string filepath)
+{
+  PointCloud<PointXYZRGB>::Ptr temp_cloud(new PointCloud<PointXYZRGB>);
+  *temp_cloud = cloud;
+
+  // ex. filepath = "~/pcd/concatenated_cloud_sample.pcd"
+  pcl::io::savePCDFileASCII(filepath, *temp_cloud);
 }

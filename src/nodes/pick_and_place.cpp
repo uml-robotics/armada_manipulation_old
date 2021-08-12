@@ -16,44 +16,25 @@ int main(int argc, char** argv)
 {
   // Initialize node & check for planning_group arg
   ros::init(argc,argv,"pick_and_place_node");
-  if (argc < 3) {
-    ROS_INFO("Usage: pick_and_place <planning_group> <camera_topic_1> <camera_topic_2> ... <camera_topic_n>");
-    return 1;
-  }
   ros::NodeHandle nh;
   ros::AsyncSpinner spinner(4);
   spinner.start();  
   ros::Duration(1.0).sleep();
 
-  // Create objects for manipulation, perception and grasping operations
-  string planning_group = argv[1];
+  string planning_group;
+  nh.getParam("/planning_group", planning_group);
+
   Manipulation manipulation(nh, planning_group);
   Perception perception(nh);
   Grasp_Cluster grasp_cluster(nh);
-
-  // Generate a list of camera topics for perception object to iterate through for concatenating a dynamic number of clouds
-  for (int i = 2; i < argc; ++i) {
-    perception.camera_names.push_back(argv[i]);
-    ROS_INFO("Camera Topic %d: %s", i-2, argv[i]);
-  }
-  
-  manipulation.move_group_ptr->setPlanningTime(15.0);
-  manipulation.move_group_ptr->setMaxVelocityScalingFactor(0.25);
-  manipulation.move_group_ptr->setPlannerId("RRTConnect");
-  manipulation.move_group_ptr->setNamedTarget("retract");         // preset_1 retract
-  manipulation.move_group_ptr->move();
 
   ros::Duration(5.0).sleep();
 
   while(ros::ok())
   {
-      // take snapshot and publish resulting concatenated pointcloud
-      perception.generate_workspace_pointcloud(nh);
-      ros::Duration(1.0).sleep();
-
+      perception.generateWorkspacePointCloud(nh);
       while (!grasp_cluster.planning_grasp && ros::ok()) {
-          perception.generate_workspace_pointcloud(nh);
-          ros::Duration(1.0).sleep();
+          perception.generateWorkspacePointCloud(nh);
       }
 
       // Store grasp pose values and create a list of picking poses

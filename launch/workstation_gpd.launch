@@ -15,7 +15,7 @@
   <include file="$(find gpd)/launch/lenet/ur5_classifier_15channels.launch">
     <arg name="node" value="detect_grasps" />
   </include>
-  
+
     <node name="detect_grasps" pkg="gpd" type="detect_grasps">
     
       <!-- If sequential importance sampling is used (default: false) -->
