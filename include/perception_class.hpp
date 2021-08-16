@@ -91,12 +91,12 @@ class Perception
 
     //Functions
     void publishCombinedCloud(PointCloud<PointXYZRGB> cloud);
-    void workstationSnapshot(ros::NodeHandle nodeHandle);
+    void multiCameraSnapshot(ros::NodeHandle nodeHandle);
+    void wristCameraSnapshot(ros::NodeHandle nodeHandle, string camera_name);
     PointCloud<PointXYZRGB> transformCloud(sensor_msgs::PointCloud2 cloud);
     PointCloud<PointXYZRGB> concatenateClouds(std::vector<PointCloud<PointXYZRGB>> cloud_snapshot_list);
 
     //Helper Function/Function Wrappers
-    void generateWorkspacePointCloud(ros::NodeHandle nodeHandle);
     void savePointCloudToDisk(PointCloud<PointXYZRGB> cloud, string filepath);
 };  
 

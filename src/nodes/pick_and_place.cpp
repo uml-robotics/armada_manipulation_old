@@ -32,21 +32,23 @@ int main(int argc, char** argv)
 
   while(ros::ok())
   {
-      perception.generateWorkspacePointCloud(nh);
-      while (!grasp_cluster.planning_grasp && ros::ok()) {
-          perception.generateWorkspacePointCloud(nh);
-      }
+    perception.multiCameraSnapshot(nh);
+    perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
+    while (!grasp_cluster.planning_grasp && ros::ok()) {
+      perception.multiCameraSnapshot(nh);
+      perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
+    }
 
-      // Store grasp pose values and create a list of picking poses
-      manipulation.store_gpd_vals(grasp_cluster.get_grasp_candidates());
-      manipulation.createPickingEEFPoseList();
+    // Store grasp pose values and create a list of picking poses
+    manipulation.store_gpd_vals(grasp_cluster.get_grasp_candidates());
+    manipulation.createPickingEEFPoseList();
 
-      // Perform Pick & Place
-      manipulation.pick_and_place(manipulation.graspPoseList, manipulation.place_pose);
+    // Perform Pick & Place
+    manipulation.pick_and_place(manipulation.graspPoseList, manipulation.place_pose);
 
-      // set planning flag to OK for next loop
-      grasp_cluster.set_planning(0);
-      ros::Duration(5.0).sleep();
+    // set planning flag to OK for next loop
+    grasp_cluster.set_planning(0);
+    ros::Duration(5.0).sleep();
   }  
 
   return 0;

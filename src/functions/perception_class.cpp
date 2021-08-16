@@ -19,6 +19,7 @@ Perception::Perception(ros::NodeHandle nodeHandle)
         new tf::TransformListener());
 
   // Retrieve list of camera names from ros parameter
+  cloud_list.resize(0);
   camera_names.resize(0);
   nodeHandle.getParam("/camera_names", camera_names);
   camera_count = camera_names.size();
@@ -51,15 +52,9 @@ void Perception::publishCombinedCloud(PointCloud<PointXYZRGB> input_cloud)
   combined_cloud_pub.publish(cloud);
 }
 
-// TAKE SNAPSHOT AND CONCATENATE IMAGES THEN PUBLISH
-void Perception::generateWorkspacePointCloud(ros::NodeHandle nodeHandle)
+// MULTI CAMERA SNAPSHOTS FUNCTION
+void Perception::multiCameraSnapshot(ros::NodeHandle nodeHandle)
 {
-  workstationSnapshot(nodeHandle);
-  publishCombinedCloud(concatenateClouds(cloud_list));
-}
-
-// TAKE CAMERA SNAPSHOTS FUNCTION
-void Perception::workstationSnapshot(ros::NodeHandle nodeHandle) {
   cloud_list.resize(0);
 
   for (int i = 0; i < camera_count; ++i) {
@@ -69,6 +64,15 @@ void Perception::workstationSnapshot(ros::NodeHandle nodeHandle) {
   }
 }
 
+// WRIST CAMERA SNAPSHOT FUNCTION
+void Perception::wristCameraSnapshot(ros::NodeHandle nodeHandle, string camera_name)
+{
+  initSubscriber(nodeHandle, camera_name);
+  ros::Duration(1.0).sleep();
+  cloud_list.push_back(transformCloud(current_cloud));
+}
+
+// TRANSFORM POINTCLOUD FUNCTION
 PointCloud<PointXYZRGB> Perception::transformCloud(sensor_msgs::PointCloud2 cloud){
   PointCloud<PointXYZRGB> temp_cloud;
   fromROSMsg(cloud, temp_cloud);
