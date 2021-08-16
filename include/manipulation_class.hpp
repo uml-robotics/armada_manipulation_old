@@ -51,6 +51,7 @@ class Manipulation
 
     //Constructor
     Manipulation(ros::NodeHandle nodeHandle, std::string planning_group);
+    void initManipulator();
 
     //Ros Service Member Variables
     ros::ServiceClient clearOctomap;
