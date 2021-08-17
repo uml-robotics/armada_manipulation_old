@@ -35,6 +35,18 @@ Manipulation::Manipulation(ros::NodeHandle nodeHandle, std::string planning_grou
         new moveit::planning_interface::MoveGroupInterface(planning_group));
     transform_listener_ptr = TransformListenerPtr(
         new tf::TransformListener());
+
+    // Initialize speed values, move robot into place
+    initManipulator();
+}
+
+void Manipulation::initManipulator()
+{
+    move_group_ptr->setPlanningTime(15.0);
+    move_group_ptr->setMaxVelocityScalingFactor(0.25);
+    move_group_ptr->setPlannerId("RRTConnect");
+    move_group_ptr->setNamedTarget("retract");         // preset_1 retract
+    move_group_ptr->move();
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -43,8 +55,7 @@ Manipulation::Manipulation(ros::NodeHandle nodeHandle, std::string planning_grou
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-// CLOSEVAR GRIPPER FUNCTION
-// set the gripper to somewhere between fully opened and closed
+// Set the gripper to somewhere between fully opened and closed
 // for robotiq_2f_85 open: 0, closed: ~0.8
 void Manipulation::setGripper(double closeVal)
 {

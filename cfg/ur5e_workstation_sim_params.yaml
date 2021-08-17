@@ -1,0 +1,6 @@
+planning_group: "manipulator"
+camera_names:
+    - "camera_right"
+    - "camera_left"
+    - "camera_rear"
+enable_grasps: false
