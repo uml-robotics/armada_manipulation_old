@@ -47,40 +47,27 @@ int main(int argc, char** argv)
   //  manipulation.move_group_ptr->setNamedTarget("top_snapshot");
   //  manipulation.move_group_ptr->move();
   //  ros::Duration(5.0).sleep();
-  //  perception.workstation_snapshot(nh);
-  //  ros::Duration(1.0).sleep();
+  //  perception.wristCameraSnapshot(nh, perception.camera_names[0].c_str());
   manipulation.move_group_ptr->setNamedTarget("right_snapshot");
   manipulation.move_group_ptr->move();
   ros::Duration(5.0).sleep();
-  perception.workstation_snapshot(nh);
-  ros::Duration(1.0).sleep();
+  ROS_INFO("snapshot from %s", perception.camera_names[0].c_str());
+  perception.wristCameraSnapshot(nh, perception.camera_names[0].c_str());
   manipulation.move_group_ptr->setNamedTarget("left_snapshot");
   manipulation.move_group_ptr->move();
   ros::Duration(5.0).sleep();
+  perception.wristCameraSnapshot(nh, perception.camera_names[0].c_str());
+  perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
+  // Store grasp pose values and create a list of picking poses
+  manipulation.store_gpd_vals(grasp_cluster.get_grasp_candidates());
+  manipulation.createPickingEEFPoseList();
 
-  ROS_INFO("Publishing combined pointcloud");
-  while(ros::ok())
-  {
-      // take snapshot and publish resulting concatenated pointcloud
-      perception.generate_workspace_pointcloud(nh);
-      ros::Duration(1.0).sleep();
+  // Perform Pick & Place
+  manipulation.pick_and_place(manipulation.graspPoseList, manipulation.place_pose);
 
-      while (!grasp_cluster.planning_grasp && ros::ok()) {
-          perception.generate_workspace_pointcloud(nh);
-          ros::Duration(1.0).sleep();
-      }
-
-      // Store grasp pose values and create a list of picking poses
-      manipulation.store_gpd_vals(grasp_cluster.get_grasp_candidates());
-      manipulation.createPickingEEFPoseList();
-
-      // Perform Pick & Place
-      manipulation.pick_and_place(manipulation.graspPoseList, manipulation.place_pose);
-
-      // set planning flag to OK for next loop
-      grasp_cluster.set_planning(0);
-      ros::Duration(5.0).sleep();
-  }
+  // set planning flag to OK for next loop
+  grasp_cluster.set_planning(0);
+  ros::Duration(5.0).sleep();
 
   return 0;
 }
