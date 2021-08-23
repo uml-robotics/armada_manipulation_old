@@ -8,11 +8,10 @@
     <arg name="arm" value="gen3"/>
     <arg name="sim_workstation" value="true"/>
     <arg name="gripper" value="robotiq_2f_85"/>
-    <arg name="namespace" value="/my_gen3"/>
   </include>
 
   <rosparam file="$(find uml_hri_nerve_pick_and_place)/cfg/gen3_workstation_sim_params.yaml" />
 
-  <node name="pick_and_place" pkg="uml_hri_nerve_pick_and_place" type="gen3_pick_and_place" />
+  <node name="pick_and_place" pkg="uml_hri_nerve_pick_and_place" type="gen3_pick_and_place" ns="my_gen3" />
 
 </launch>
