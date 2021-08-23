@@ -14,28 +14,21 @@
 
 int main(int argc, char** argv)
 {
-  // Initialize node & check for planning_group arg
+  // Initialize node
   ros::init(argc,argv,"pick_and_place_node");
-  if (argc < 3) {
-    ROS_INFO("Usage: pick_and_place <planning_group> <camera_topic_1> <camera_topic_2> ... <camera_topic_n>");
-    return 1;
-  }
   ros::NodeHandle nh;
   ros::AsyncSpinner spinner(4);
   spinner.start();
   ros::Duration(1.0).sleep();
 
   // Create objects for manipulation, perception and grasping operations
-  string planning_group = argv[1];
+  string planning_group, wrist_cam;
+  nh.getParam("/planning_group", planning_group);
+  nh.getParam("/camera_names", wrist_cam);
   Manipulation manipulation(nh, planning_group);
   Perception perception(nh);
   Grasp_Cluster grasp_cluster(nh);
-
-  // Generate a list of camera topics for perception object to iterate through for concatenating a dynamic number of clouds
-  for (int i = 2; i < argc; ++i) {
-    perception.camera_names.push_back(argv[i]);
-    ROS_INFO("Camera Topic %d: %s", i-2, argv[i]);
-  }
+  ROS_INFO("Camera Topic: %s", wrist_cam);
 
   // Move to snapshot poses and add to pointcloud
   manipulation.move_group_ptr->setPlanningTime(15.0);
@@ -47,16 +40,22 @@ int main(int argc, char** argv)
   //  manipulation.move_group_ptr->setNamedTarget("top_snapshot");
   //  manipulation.move_group_ptr->move();
   //  ros::Duration(5.0).sleep();
-  //  perception.wristCameraSnapshot(nh, perception.camera_names[0].c_str());
+  //  perception.wristCameraSnapshot(nh, wrist_cam);
   manipulation.move_group_ptr->setNamedTarget("right_snapshot");
   manipulation.move_group_ptr->move();
   ros::Duration(5.0).sleep();
-  ROS_INFO("snapshot from %s", perception.camera_names[0].c_str());
-  perception.wristCameraSnapshot(nh, perception.camera_names[0].c_str());
+  perception.wristCameraSnapshot(nh, wrist_cam);
+  while (perception.cloud_list[0].size() == 0) {
+    // wait
+  }
   manipulation.move_group_ptr->setNamedTarget("left_snapshot");
   manipulation.move_group_ptr->move();
   ros::Duration(5.0).sleep();
-  perception.wristCameraSnapshot(nh, perception.camera_names[0].c_str());
+  perception.wristCameraSnapshot(nh, wrist_cam);
+  while (perception.cloud_list[1].size() == 0) {
+    // wait
+  }
+  ROS_INFO("cloud_list size: %d", perception.cloud_list.size());
   perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
   // Store grasp pose values and create a list of picking poses
   manipulation.store_gpd_vals(grasp_cluster.get_grasp_candidates());

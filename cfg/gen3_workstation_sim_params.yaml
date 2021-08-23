@@ -1,0 +1,3 @@
+planning_group: "arm"
+camera_names: "camera"
+enable_grasps: false
