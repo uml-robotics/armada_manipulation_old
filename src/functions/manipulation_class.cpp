@@ -190,6 +190,7 @@ void Manipulation::store_gpd_vals(gpd_ros::GraspConfigList msg)
     }
 }
 
+
 void Manipulation::createPickingEEFPoseList()
 {
     int n = candidates.grasps.size();

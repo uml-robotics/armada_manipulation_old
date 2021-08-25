@@ -28,7 +28,7 @@ int main(int argc, char** argv)
   Manipulation manipulation(nh, planning_group);
   Perception perception(nh);
   Grasp_Cluster grasp_cluster(nh);
-  ROS_INFO("Camera Topic: %s", wrist_cam);
+  ROS_INFO("Camera Topic: %s", wrist_cam.c_str());
 
   // Move to snapshot poses and add to pointcloud
   manipulation.move_group_ptr->setPlanningTime(15.0);
@@ -57,7 +57,16 @@ int main(int argc, char** argv)
   }
   ROS_INFO("cloud_list size: %d", perception.cloud_list.size());
   perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
+
   // Store grasp pose values and create a list of picking poses
+  ROS_INFO("number of candidates detected: %d", grasp_cluster.candidates.grasps.size());
+  if(grasp_cluster.candidates.grasps.size() == 0) {
+    ROS_INFO("Waiting for candidate list...");
+  }
+  while(grasp_cluster.candidates.grasps.size() == 0) {
+    //wait
+  }
+  ROS_INFO("number of candidates detected now: %d", grasp_cluster.candidates.grasps.size());
   manipulation.store_gpd_vals(grasp_cluster.get_grasp_candidates());
   manipulation.createPickingEEFPoseList();
 
