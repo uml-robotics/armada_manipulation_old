@@ -25,8 +25,12 @@ Manipulation::Manipulation(ros::NodeHandle nodeHandle, std::string planning_grou
 
     // instantiate publisher for gripper commands
     nodeNamespace = nodeHandle.getNamespace();
-    gripperTopic = nodeNamespace + "robotiq_2f_85_gripper_controller/gripper_cmd/goal";
+    gripperTopic = nodeNamespace + "/robotiq_2f_85_gripper_controller/gripper_cmd/goal";
     this->gripper_command = nodeHandle.advertise<control_msgs::GripperCommandActionGoal>(gripperTopic, 10);
+
+    //get gripper tcp and offset values from parameter server
+    nodeHandle.getParam("grasp_point_dist", grasp_point_dist);
+    nodeHandle.getParam("pregrasp_offset_dist", pregrasp_offset_dist);
 
     // establish all pointers
     planning_scene_ptr = PlanningScenePtr(
@@ -230,7 +234,7 @@ GraspPose Manipulation::createPickingEEFPose(gpd_ros::GraspConfig grasp_msg)
     //    a need because the robotiq_2f_85 which we are currently using is not a "true" parallel gripper and the wider the object, the closer the finger pads are to the palm
     //
     // This value can remain static afer some tweaking for the time being since we need a general value and not perfect optomization immediately
-    double grasp_point_dist = 0.095;
+//    double grasp_point_dist = 0.095;
 
     tf::Transform tf_grasp_odom_(tf::Quaternion(0, 0, -M_PI/4 - M_PI/16, 1), tf::Vector3(0, 0, -grasp_point_dist));
     tf::Transform tf_grasp_odom = tf_base_odom * tf_grasp_base * tf_grasp_odom_;
@@ -245,7 +249,7 @@ GraspPose Manipulation::createPickingEEFPose(gpd_ros::GraspConfig grasp_msg)
     //
     // This value can also remain static after some tweaking, in the same way as the previous value this will actually depend more on other variables such as how many objects
     //    are in the scene, are there obstacles, etc.
-    double pregrasp_offset_dist = 0.10;
+//    double pregrasp_offset_dist = 0.10;
 
     tf::Transform tf_pregrasp_odom_(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, -pregrasp_offset_dist));
     tf::Transform tf_pregrasp_odom = tf_grasp_odom * tf_pregrasp_odom_;

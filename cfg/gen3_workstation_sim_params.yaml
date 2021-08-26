@@ -1,3 +1,6 @@
 planning_group: "arm"
 camera_names: "camera"
 enable_grasps: false
+grasp_point_dist: 0.095
+pregrasp_offset_dist: 0.10
+

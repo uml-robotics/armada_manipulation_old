@@ -60,6 +60,8 @@ class Manipulation
     //Node Member Variables
     string nodeNamespace;
     string gripperTopic;
+    double grasp_point_dist;
+    double pregrasp_offset_dist;
 
     //Moveit! Member Variables
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
