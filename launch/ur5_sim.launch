@@ -11,8 +11,6 @@
   </include>
 
   <rosparam file="$(find uml_hri_nerve_pick_and_place)/cfg/ur5e_workstation_sim_params.yaml" />
-  <param name="weights_file" value="/home/brian/armada_ws/src/gpd/models/lenet/15channels/params/" />
-  <!-- <rosparam param="weights_file" value="$(eval '/home/' + env('USER') + '/armada_ws' + '/src/gpd/models/lenet/15channels/params/')" />-->
 
   <node name="pick_and_place" pkg="uml_hri_nerve_pick_and_place" type="pick_and_place" />
 
