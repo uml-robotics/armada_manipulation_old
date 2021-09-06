@@ -21,8 +21,15 @@ int main(int argc, char** argv)
   spinner.start();  
   ros::Duration(1.0).sleep();
 
+  // Ros Service Member Variables
+  ros::ServiceClient clearOctomap;
+  std_srvs::Empty srv;
+
+  // Clear the octomap in case it was previously occupied
+  clearOctomap = nh.serviceClient<std_srvs::Empty>("/clear_octomap");
+
   string planning_group;
-  nh.getParam("/planning_group", planning_group);
+  nh.getParam("/move_group/planning_group", planning_group);
 
   Manipulation manipulation(nh, planning_group);
   Perception perception(nh);
@@ -40,15 +47,16 @@ int main(int argc, char** argv)
     }
 
     // Store grasp pose values and create a list of picking poses
-    manipulation.store_gpd_vals(grasp_cluster.get_grasp_candidates());
+    manipulation.storeGpdVals(grasp_cluster.get_grasp_candidates());
     manipulation.createPickingEEFPoseList();
 
     // Perform Pick & Place
-    manipulation.pick_and_place(manipulation.graspPoseList, manipulation.place_pose);
+    manipulation.pickAndPlace(manipulation.graspPoseList, "retract");
 
     // set planning flag to OK for next loop
     grasp_cluster.set_planning(0);
     ros::Duration(5.0).sleep();
+    manipulation.getParams(nh);
   }  
 
   return 0;
