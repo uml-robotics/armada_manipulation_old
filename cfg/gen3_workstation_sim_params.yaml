@@ -1,6 +1,4 @@
-planning_group: "arm"
 camera_names: "camera"
-enable_grasps: false
 end_effector: {
     name: "robotiq_2f_85",
     grasp_offset: 0.095,

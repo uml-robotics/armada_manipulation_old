@@ -1,9 +1,7 @@
-planning_group: "manipulator"
 camera_names:
     - "camera_right"
     - "camera_left"
     - "camera_rear"
-enable_grasps: false
 end_effector: {
     name: "robotiq_2f_85",
     grasp_offset: 0.095,
