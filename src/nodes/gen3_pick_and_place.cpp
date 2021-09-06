@@ -1,11 +1,9 @@
 // ********************************************************************************************
-// Author: Brian Flynn
+// Author: Dan Hemphill
 // NERVE Center @ UMASS Lowell
-// pick_and_place.cpp
+// gen3_pick_and_place.cpp
 //
-// pick and place node
-//
-// TODO: update this description after code is complete
+// Gen3 pick and place node
 // ********************************************************************************************
 
 #include "manipulation_class.hpp"
@@ -21,59 +19,51 @@ int main(int argc, char** argv)
   spinner.start();
   ros::Duration(1.0).sleep();
 
+  // Ros Service Member Variables
+  ros::ServiceClient clearOctomap;
+  std_srvs::Empty srv;
+
+  // Clear the octomap in case it was previously occupied
+  clearOctomap = nh.serviceClient<std_srvs::Empty>("/clear_octomap");
+
   // Create objects for manipulation, perception and grasping operations
   string planning_group, wrist_cam;
-  nh.getParam("/planning_group", planning_group);
+  nh.getParam("/move_group/planning_group", planning_group);
   nh.getParam("/camera_names", wrist_cam);
   Manipulation manipulation(nh, planning_group);
   Perception perception(nh);
   Grasp_Cluster grasp_cluster(nh);
-  ROS_INFO("Camera Topic: %s", wrist_cam.c_str());
+
+  ros::Duration(5.0).sleep();
 
   // Move to snapshot poses and add to pointcloud
-  manipulation.move_group_ptr->setPlanningTime(15.0);
-  manipulation.move_group_ptr->setMaxVelocityScalingFactor(0.25);
-  manipulation.move_group_ptr->setPlannerId("RRTConnect");
-  manipulation.move_group_ptr->setNamedTarget("retract");         // preset_1 retract
-  manipulation.move_group_ptr->move();
-  ros::Duration(5.0).sleep();
-  //  manipulation.move_group_ptr->setNamedTarget("top_snapshot");
-  //  manipulation.move_group_ptr->move();
-  //  ros::Duration(5.0).sleep();
-  //  perception.wristCameraSnapshot(nh, wrist_cam);
-  manipulation.move_group_ptr->setNamedTarget("right_snapshot");
-  manipulation.move_group_ptr->move();
-  ros::Duration(5.0).sleep();
+  manipulation.place("right_snapshot");
+  ros::Duration(4.5).sleep();
   perception.wristCameraSnapshot(nh, wrist_cam);
   while (perception.cloud_list[0].size() == 0) {
     // wait
   }
-  manipulation.move_group_ptr->setNamedTarget("left_snapshot");
-  manipulation.move_group_ptr->move();
-  ros::Duration(5.0).sleep();
+  manipulation.place("left_snapshot");
+  ros::Duration(4.5).sleep();
   perception.wristCameraSnapshot(nh, wrist_cam);
   while (perception.cloud_list[1].size() == 0) {
     // wait
   }
-  ROS_INFO("cloud_list size: %d", perception.cloud_list.size());
+
+  // Publish cloud
   perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
 
   // Store grasp pose values and create a list of picking poses
-  ROS_INFO("number of candidates detected: %d", grasp_cluster.candidates.grasps.size());
-  if(grasp_cluster.candidates.grasps.size() == 0) {
-    ROS_INFO("Waiting for candidate list...");
-  }
   while(grasp_cluster.candidates.grasps.size() == 0) {
     //wait
   }
-  ROS_INFO("number of candidates detected now: %d", grasp_cluster.candidates.grasps.size());
-  manipulation.store_gpd_vals(grasp_cluster.get_grasp_candidates());
+  manipulation.storeGpdVals(grasp_cluster.get_grasp_candidates());
   manipulation.createPickingEEFPoseList();
 
   // Perform Pick & Place
-  manipulation.pick_and_place(manipulation.graspPoseList, manipulation.place_pose);
+  manipulation.pickAndPlace(manipulation.graspPoseList, "retract");
 
-  // set planning flag to OK for next loop
+  // Set planning flag to OK for next loop
   grasp_cluster.set_planning(0);
   ros::Duration(5.0).sleep();
 

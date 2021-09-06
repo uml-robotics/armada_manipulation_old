@@ -6,8 +6,8 @@ end_effector: {
 }
 move_group: {
     planning_group: "arm",
-    MaxVelocityScalingFactor: 1.0,
-    PlanningTime: 5,
+    MaxVelocityScalingFactor: 0.25,
+    PlanningTime: 15,
     NumPlanningAttempts: 5,
     GoalPositionTolerance: 0.001,
     GoalOrientationTolerance: 0.002,
