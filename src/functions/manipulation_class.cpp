@@ -132,8 +132,7 @@ void Manipulation::executeGrasp(GraspPose graspPose)
     plan_and_move();
     ros::Duration(0.5).sleep();
 
-    // dn't close gripper for now until it is in planning
-    setGripper(0.0);
+    setGripper(1.2);
     ros::Duration(1.0).sleep();
 
     set_target_pose_from_grasps(graspPose.pre, graspPose.actual);
@@ -158,7 +157,7 @@ void Manipulation::pick_and_place(std::vector<GraspPose> graspPoseList, geometry
     pick(graspPoseList);
     // place(placePose);
     // Create a function to do this later
-    move_group_ptr->setNamedTarget("Home");
+    move_group_ptr->setNamedTarget("Trash");
     move_group_ptr->move();
     ros::Duration(0.5).sleep();
 
