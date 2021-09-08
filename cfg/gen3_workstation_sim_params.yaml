@@ -1,15 +1,15 @@
 camera_names: "camera"
 end_effector: {
     name: "robotiq_2f_85",
-    grasp_offset: 0.095,
-    pregrasp_dist: 0.10,
+    grasp_offset: -0.02,
+    pregrasp_dist: 0.1,
 }
 move_group: {
     planning_group: "arm",
-    MaxVelocityScalingFactor: 0.25,
-    PlanningTime: 15,
-    NumPlanningAttempts: 5,
-    GoalPositionTolerance: 0.001,
+    MaxVelocityScalingFactor: 1,
+    PlanningTime: 3,
+    NumPlanningAttempts: 30,
+    GoalPositionTolerance: 0.01,
     GoalOrientationTolerance: 0.002,
     setPlannerId: "RRTConnect",
 }
