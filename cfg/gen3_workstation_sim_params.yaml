@@ -1,7 +1,7 @@
 camera_names: "camera"
 end_effector: {
     name: "robotiq_2f_85",
-    grasp_offset: -0.02,
+    grasp_offset: -0.03,
     pregrasp_dist: 0.1,
 }
 move_group: {
