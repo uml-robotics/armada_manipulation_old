@@ -23,9 +23,10 @@ Manipulation::Manipulation(ros::NodeHandle nh, std::string planning_group)
   // Instantiate publisher for gripper commands
   string gripper_name;
   nh.getParam("/end_effector/name", gripper_name);
-  string gripperTopic = nh.getNamespace() + "/" + gripper_name + "_gripper_controller/gripper_cmd/goal";
+  string gripperTopic = nh.getNamespace() + "/gripper_controller/gripper_action/goal";  // Fetch has a different gripper action topic
+  string headTopic = nh.getNamespace() + "/head_controller/point_head/goal";  // For moving fetch's head
   this->gripper_command = nh.advertise<control_msgs::GripperCommandActionGoal>(gripperTopic, 10);
-
+  this->head_command = nh.advertise<control_msgs::PointHeadActionGoal>(headTopic, 10);
   // Establish all pointers
   planning_scene_ptr = PlanningScenePtr(
         new moveit::planning_interface::PlanningSceneInterface());
@@ -38,7 +39,7 @@ Manipulation::Manipulation(ros::NodeHandle nh, std::string planning_group)
   getParams(nh);
 
   move_group_ptr->setNamedTarget("retract");
-  move_group_ptr->move();
+  //move_group_ptr->move(); // Fetch does not have a retract target yet.
 }
 
 void Manipulation::getParams(ros::NodeHandle nh)
@@ -61,6 +62,20 @@ void Manipulation::getParams(ros::NodeHandle nh)
   // end effector parameters
   nh.getParam("/end_effector/grasp_offset", grasp_offset);
   nh.getParam("/end_effector/pregrasp_dist", pregrasp_dist);
+}
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Fetch Functions
+// Set Fetch's head to aim at a specific point w.r.t its base.
+// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void Manipulation::setHead()
+{ 
+  this->head_cmd.goal.target.header.frame_id = "base_link";
+  this->head_cmd.goal.target.point.x = 0.6;
+  this->head_cmd.goal.target.point.y = 0.1;
+  this->head_cmd.goal.target.point.z = 0.7;
+
+  head_command.publish(head_cmd);
 }
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -116,7 +131,7 @@ void Manipulation::pick(std::vector<GraspPose> graspPoseList)
       if (std::get<0>(grasp_plan_actual)) {
         move_group_ptr->execute(std::get<1>(grasp_plan_actual));
         ros::Duration(0.5).sleep();
-        setGripper(0.4);
+        setGripper(0);  // Only 0 or 1 for Fetch's gripper
         ros::Duration(2.0).sleep();
         std::tuple<bool,moveit::planning_interface::MoveGroupInterface::Plan> grasp_plan_pre = plan(graspPoseList[i].pre, graspPoseList[i].actual);
         if (std::get<0>(grasp_plan_pre)) {
@@ -141,7 +156,7 @@ void Manipulation::pickAndPlace(std::vector<GraspPose> graspPoseList, string pla
   pick(graspPoseList);
   place(placePose);
 
-  setGripper(0.0);
+  setGripper(1);  // Only 0 or 1 for Fetch's gripper
   ros::Duration(2.0).sleep();
 }
 
@@ -185,11 +200,12 @@ GraspPose Manipulation::createPickingEEFPose(gpd_ros::GraspConfig grasp_msg)
     ROS_ERROR("%s", err.what());
   }
 
-  tf::Transform tf_grasp_odom_(tf::Quaternion(0, 0, -M_PI/4 - M_PI/16, 1), tf::Vector3(0, 0, -grasp_offset));
+  // Fetch specific rotaion values
+  tf::Transform tf_grasp_odom_(tf::Quaternion(-0.5, -0.5, -0.5, 0.5), tf::Vector3(0, 0, -grasp_offset));
   tf::Transform tf_grasp_odom = tf_base_odom * tf_grasp_base * tf_grasp_odom_;
   tf::poseTFToMsg(tf_grasp_odom, thisGrasp.actual);
 
-  tf::Transform tf_pregrasp_odom_(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, -pregrasp_dist));
+  tf::Transform tf_pregrasp_odom_(tf::Quaternion(0, 0, 0, 1), tf::Vector3(-pregrasp_dist, 0, 0));
   tf::Transform tf_pregrasp_odom = tf_grasp_odom * tf_pregrasp_odom_;
   tf::poseTFToMsg(tf_pregrasp_odom, thisGrasp.pre);
 
