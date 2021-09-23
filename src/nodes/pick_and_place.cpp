@@ -19,7 +19,7 @@ int main(int argc, char** argv)
   ros::NodeHandle nh;
   ros::AsyncSpinner spinner(4);
   spinner.start();  
-  ros::Duration(1.0).sleep();
+  ros::Duration(10).sleep(); // Temp fix: need time for Fetch's head point action to start
 
   // Ros Service Member Variables
   ros::ServiceClient clearOctomap;
@@ -32,6 +32,7 @@ int main(int argc, char** argv)
   nh.getParam("/move_group/planning_group", planning_group);
 
   Manipulation manipulation(nh, planning_group);
+  manipulation.setHead(); // Temp: Move Fetch's head so it can see the table
   Perception perception(nh);
   Grasp_Cluster grasp_cluster(nh);
 
