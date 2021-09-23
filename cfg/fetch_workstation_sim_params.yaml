@@ -1,0 +1,16 @@
+camera_names: 
+    - "head_camera"
+end_effector: {
+    name: "gripper",
+    grasp_offset: 0.15,
+    pregrasp_dist: 0.25,
+}
+move_group: {
+    planning_group: "arm_with_torso",
+    MaxVelocityScalingFactor: 0.50,
+    PlanningTime: 15,
+    NumPlanningAttempts: 5,
+    GoalPositionTolerance: 0.001,
+    GoalOrientationTolerance: 0.002,
+    setPlannerId: "RRTConnect",
+}
