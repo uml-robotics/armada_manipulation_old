@@ -15,18 +15,18 @@
 int main(int argc, char** argv)
 {
   // Initialize node & check for planning_group arg
-  ros::init(argc,argv,"pick_and_place_node");
+  ros::init(argc,argv,"pick_and_place_gazebo_node");
   ros::NodeHandle nh;
   ros::AsyncSpinner spinner(4);
-  spinner.start();  
+  spinner.start();
   ros::Duration(1.0).sleep();
 
-  // Ros Service Member Variables
-  ros::ServiceClient clearOctomap;
+  // Initialize Octomap clearing service
+  ros::ServiceClient clearOctomap = nh.serviceClient<std_srvs::Empty>("/clear_octomap");;
   std_srvs::Empty srv;
 
-  // Clear the octomap in case it was previously occupied
-  clearOctomap = nh.serviceClient<std_srvs::Empty>("/clear_octomap");
+  // Intialize Gazebo object spawning/deleting services
+  ros::ServiceClient spawnModel;
 
   string planning_group;
   nh.getParam("/move_group/planning_group", planning_group);
@@ -46,18 +46,14 @@ int main(int argc, char** argv)
       perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
     }
 
-    // Store grasp pose values and create a list of picking poses
-    manipulation.storeGpdVals(grasp_cluster.get_grasp_candidates());
-    manipulation.createPickingEEFPoseList();
-
     // Perform Pick & Place
-    manipulation.pickAndPlace(manipulation.graspPoseList, "retract");
+    manipulation.pickandPlace(manipulation.createPickingEEFPoseList(grasp_cluster.get_grasp_candidates()), "wait");
 
     // set planning flag to OK for next loop
     grasp_cluster.set_planning(0);
     ros::Duration(5.0).sleep();
     manipulation.getParams(nh);
-  }  
+  }
 
   return 0;
 }

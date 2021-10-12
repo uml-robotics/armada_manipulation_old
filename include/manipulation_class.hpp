@@ -10,6 +10,7 @@
 #include <cstring>
 #include <ctime>
 #include <iostream>
+#include <fstream>
 #include <boost/filesystem.hpp>
 #include <math.h>
 #include <stdlib.h>
@@ -32,6 +33,8 @@
 #include <std_msgs/Int8.h>
 #include <gpd_ros/GraspConfigList.h>
 #include <gpd_ros/GraspConfig.h>
+#include <gazebo_msgs/SpawnModel.h>
+#include <gazebo_msgs/DeleteModel.h>
 
 using namespace std;
 
@@ -41,17 +44,8 @@ typedef boost::shared_ptr<tf::TransformListener> TransformListenerPtr;
 
 struct GraspPose{
   geometry_msgs::Pose pre;
-  geometry_msgs::Pose actual;
-  geometry_msgs::Pose after;
-};
-
-struct GraspPlan{
-  bool preResult;
-  bool actualResult;
-  bool afterResult;
-  moveit::planning_interface::MoveGroupInterface::Plan prePlan;
-  moveit::planning_interface::MoveGroupInterface::Plan actualPlan;
-  moveit::planning_interface::MoveGroupInterface::Plan afterPlan;
+  geometry_msgs::Pose grasp;
+  geometry_msgs::Pose post;
 };
 
 class Manipulation
@@ -66,49 +60,45 @@ class Manipulation
     control_msgs::GripperCommandActionGoal gripper_cmd;
     ros::Publisher gripper_command;
 
-    //Pointer Variables
+    //Utility Class Pointers
     MoveGroupPtr move_group_ptr;
     PlanningScenePtr planning_scene_ptr;
     TransformListenerPtr transform_listener_ptr;
 
-    //move_group Member Variables
+    //Grasp Planning Parameter Values
     double MaxVelocityScalingFactor;
     double PlanningTime;
     int NumPlanningAttempts;
     double GoalPositionTolerance;
     double GoalOrientationTolerance;
     string PlannerId;
-
-    //Grasp Planning Member Variables
-    std::vector<GraspPose> graspPoseList;
-    gpd_ros::GraspConfigList candidates;
+    double jump_threshold;            // 0.5 default, one source uses 5.0 with good results, others use 0
+    double eef_step;                  // 0.01 default (1 cm)
     double grasp_offset;
     double pregrasp_dist;
-
-    //Manipulation Pose Member Variables
-    std::vector<double> joint_group_positions;
-    geometry_msgs::Pose target_pose;
-    geometry_msgs::Pose place_pose;
-    geometry_msgs::Vector3 orientation;
-
-    //Flag Variables
-    bool pose_success;
 
     //Gripper Functions
     void setGripper(trajectory_msgs::JointTrajectory& posture, double closeVal);
     void setGripper(double closeVal);
+    void openGripper(trajectory_msgs::JointTrajectory& posture);
+    void closedGripper(trajectory_msgs::JointTrajectory& posture);
 
-    //Functions
-    void pick(std::vector<GraspPose> grasp_pose_list);
+    //Path Planning and Execution
+    void pick(vector<geometry_msgs::Pose> grasp_poses);
+    void cartesianPick(std::vector<GraspPose> graspPose_list);
+    void cartesianMove(std::vector<geometry_msgs::Pose> pose_list);
     void place(string place_pose);
-    void pickAndPlace(std::vector<GraspPose> grasp_pose_list, string place_pose);
-    void setPickingEEFPoseTarget(geometry_msgs::Pose grasp_position_pose, geometry_msgs::Pose grasp_orientation_pose);
-    std::tuple<bool, moveit::planning_interface::MoveGroupInterface::Plan> plan(geometry_msgs::Pose grasp_position_pose, geometry_msgs::Pose grasp_orientation_pose);
+    void place(geometry_msgs::Pose place_pose);
+    void pickandPlace(std::vector<GraspPose> graspPose_list, string place_pose);
+    bool plan(geometry_msgs::Pose grasp_pose, moveit::planning_interface::MoveGroupInterface::Plan& my_plan);
+    double cartesianPlan(std::vector<geometry_msgs::Pose> pose_list, moveit::planning_interface::MoveGroupInterface::Plan& my_plan);
 
-    //Helper Funcitons
-    void storeGpdVals(gpd_ros::GraspConfigList candidates);
-    void createPickingEEFPoseList();
+    //Grasp Position and Orientation Generation
+    std::vector<GraspPose> createPickingEEFPoseList(gpd_ros::GraspConfigList candidates);
     GraspPose createPickingEEFPose(gpd_ros::GraspConfig grasp_msg);
+
+    //Scene Functions
+    void addCollisionObjects(moveit::planning_interface::PlanningSceneInterface& planning_scene_interface);
 
 };
 

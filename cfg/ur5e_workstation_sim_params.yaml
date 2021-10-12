@@ -15,4 +15,6 @@ move_group: {
     GoalPositionTolerance: 0.001,
     GoalOrientationTolerance: 0.002,
     setPlannerId: "RRTConnect",
+    jump_threshold: 5.0,
+    eef_step: 0.01,
 }

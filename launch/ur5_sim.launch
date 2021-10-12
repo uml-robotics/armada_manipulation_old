@@ -12,6 +12,7 @@
 
   <rosparam file="$(find uml_hri_nerve_pick_and_place)/cfg/ur5e_workstation_sim_params.yaml" />
 
-  <node name="pick_and_place" pkg="uml_hri_nerve_pick_and_place" type="pick_and_place" />
+  <node name="pick_and_place_gazebo" pkg="uml_hri_nerve_pick_and_place" type="pick_and_place_gazebo" output="screen"/>
+  <node name="spawn_object" pkg="uml_hri_nerve_pick_and_place" type="spawn_object.py" output="screen"/>
 
 </launch>
