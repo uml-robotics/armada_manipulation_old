@@ -128,7 +128,7 @@ PointCloud<PointXYZRGB> Perception::concatenateClouds(std::vector<PointCloud<Poi
   PassThrough<PointXYZRGB> pass_z;
   pass_z.setInputCloud (temp_cloud);
   pass_z.setFilterFieldName ("z");
-  pass_z.setFilterLimits (0.8, 1.3);
+  pass_z.setFilterLimits (0.8, 1.18);
   pass_z.filter(*temp_cloud);
 
   sac_segmentation(temp_cloud);
