@@ -38,4 +38,17 @@
   <!-- include the following line if you wan to control the gripper remotely through a terminal -->
   <!-- <node name="Robotiq2FGripperSimpleController" pkg="robotiq_2f_gripper_control" type="Robotiq2FGripperSimpleController.py" output="screen"/> -->
 
+  <!-- these will launch the real robot (currently with the wrong configuration, needs correction and swap to custom moveit config for actual hardware -->
+  <!--
+  roslaunch ur_robot_driver ur5e_bringup.launch robot_ip:=10.10.10.152 kinematics_config:=$HOME/my_robot_calibration.yaml tool_device_name:=/tmp/ttyUR tool_voltage:=24 tool_parity:=0 tool_baud_rate:=1
+  atics_config:=$HOME/my_robot_calibration.yaml tool_device_name:=/tmp/ttyUR tool_voltage:=24 tool_parity:=0 tool_baud_rate:=115200 tool_stop_bits:=1 tool_rx_idle_chars:=1.5 tool_tx_idle_bits:=3.5 use_tool_communication:
+  kinematics_config:=$HOME/my_robot_calibration.yaml tool_device_name:=/tmp/ttyUR tool_voltage:=24 tool_parity:=0 tool_baud_rate:=115200 tool_stop_bits:=1 tool_rx_idle_chars:=1.5 tool_tx_idle_bits:=3.5 use_tool
+
+  roslaunch ur5e_moveit_config ur5e_moveit_planning_execution.launch
+
+  roslaunch ur5_moveit_config moveit_rviz.launch config:=true
+  -->
+
+
+
 </launch>
