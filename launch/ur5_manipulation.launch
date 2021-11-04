@@ -3,52 +3,17 @@
 
   <include file="$(find uml_hri_nerve_pick_and_place)/launch/gpd_ur5.launch" />
 
-  <include file="$(find uml_hri_nerve_armada_workstation)/universal_robot/ur_e_gazebo/launch/gazebo_universal_robot.launch" >
+  <node name="Robotiq2FGripperTcpNode" pkg="robotiq_2f_gripper_control" type="Robotiq2FGripperTcpNode.py" args="10.10.10.42"/>
+
+  <include file="$(find uml_hri_nerve_armada_workstation)/universal_robot/ur_e_bringup/launch/ur5e_bringup.launch" >
+    <arg name="robot_ip" value="10.10.10.152"/>
+    <arg name="kinematics_config" value="$HOME/my_robot_calibration.yaml"/>
+    <arg name="robot_description_file" value="$(find uml_hri_nerve_armada_workstation)/universal_robot/ur_e_description/urdf/ur5e_robot_d435_millibar_robotiq_2f_85_workstation.urdf.xacro"/>
+    <arg name="limited" value="false"/>
     <arg name="model" value="ur5"/>
     <arg name="sim_workstation" value="true"/>
     <arg name="gripper" value="robotiq_2f_85"/>
-    <arg name="wrist_cam" value="d435_millibar"/>  <!-- d435_millibar -->
+    <arg name="wrist_cam" value="d435_millibar"/>
   </include>
-
-  <rosparam file="$(find uml_hri_nerve_pick_and_place)/cfg/ur5e_workstation_sim_params.yaml" />
-
-  <!--
-  <node name="pick_and_place_gazebo" pkg="uml_hri_nerve_pick_and_place" type="pick_and_place_gazebo" output="screen"/>
-  <node name="spawn_object" pkg="uml_hri_nerve_pick_and_place" type="spawn_object.py" output="screen"/>
-  -->
-
-  <node name="Robotiq2FGripperTcpNode" pkg="robotiq_2f_gripper_control" type="Robotiq2FGripperTcpNode.py" args="10.10.10.42"/>
-
-  <node name="robotiq_2f_gripper_action_server_node" pkg="robotiq_2f_gripper_action_server" type="robotiq_2f_gripper_action_server_node">
-    <remap from="/gripper/goal" to="/robotiq_2f_85_gripper_controller/gripper_cmd/goal"/>
-    <remap from="/input" to="/Robotiq2FGripperRobotInput"/>
-    <remap from="/output" to="/Robotiq2FGripperRobotOutput"/>
-  </node>
-
-  <!--
-  <node name="robotiq_2f_gripper_action_server_node" pkg="robotiq_2f_gripper_action_server" type="robotiq_2f_gripper_action_server_node"/>
-  -->
-
-  <!--
-  <include file="$(find robotiq_2f_gripper_action_server)/launch/robotiq_2f_gripper_action_server.launch" >
-    <arg name="gripper_name" value="robotiq_2f_85"/>
-  </include>
-  -->
-
-  <!-- include the following line if you wan to control the gripper remotely through a terminal -->
-  <!-- <node name="Robotiq2FGripperSimpleController" pkg="robotiq_2f_gripper_control" type="Robotiq2FGripperSimpleController.py" output="screen"/> -->
-
-  <!-- these will launch the real robot (currently with the wrong configuration, needs correction and swap to custom moveit config for actual hardware -->
-  <!--
-  roslaunch ur_robot_driver ur5e_bringup.launch robot_ip:=10.10.10.152 kinematics_config:=$HOME/my_robot_calibration.yaml tool_device_name:=/tmp/ttyUR tool_voltage:=24 tool_parity:=0 tool_baud_rate:=1
-  atics_config:=$HOME/my_robot_calibration.yaml tool_device_name:=/tmp/ttyUR tool_voltage:=24 tool_parity:=0 tool_baud_rate:=115200 tool_stop_bits:=1 tool_rx_idle_chars:=1.5 tool_tx_idle_bits:=3.5 use_tool_communication:
-  kinematics_config:=$HOME/my_robot_calibration.yaml tool_device_name:=/tmp/ttyUR tool_voltage:=24 tool_parity:=0 tool_baud_rate:=115200 tool_stop_bits:=1 tool_rx_idle_chars:=1.5 tool_tx_idle_bits:=3.5 use_tool
-
-  roslaunch ur5e_moveit_config ur5e_moveit_planning_execution.launch
-
-  roslaunch ur5_moveit_config moveit_rviz.launch config:=true
-  -->
-
-
 
 </launch>
