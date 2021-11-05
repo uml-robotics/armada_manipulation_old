@@ -71,14 +71,21 @@ add_executable(gen3_pick_and_place
         src/functions/pointcloud_filters.cpp
         src/functions/grasp_cluster_class.cpp)
 add_executable(pick_and_place_gazebo
-              src/nodes/pick_and_place_gazebo.cpp
-              src/functions/manipulation_class.cpp
-              src/functions/perception_class.cpp
-              src/functions/pointcloud_filters.cpp
-              src/functions/grasp_cluster_class.cpp)
+        src/nodes/pick_and_place_gazebo.cpp
+        src/functions/manipulation_class.cpp
+        src/functions/perception_class.cpp
+        src/functions/pointcloud_filters.cpp
+        src/functions/grasp_cluster_class.cpp)
+add_executable(wrist_cam_pick_and_place
+        src/nodes/wrist_cam_pick_and_place.cpp
+        src/functions/manipulation_class.cpp
+        src/functions/perception_class.cpp
+        src/functions/pointcloud_filters.cpp
+        src/functions/grasp_cluster_class.cpp)
 target_link_libraries(pick_and_place ${catkin_LIBRARIES})
 target_link_libraries(gen3_pick_and_place ${catkin_LIBRARIES})
 target_link_libraries(pick_and_place_gazebo ${catkin_LIBRARIES})
+target_link_libraries(wrist_cam_pick_and_place ${catkin_LIBRARIES})
 
 add_executable(capture_pointcloud_service src/services/capture_pointcloud_service.cpp)
 target_link_libraries(capture_pointcloud_service ${catkin_LIBRARIES})

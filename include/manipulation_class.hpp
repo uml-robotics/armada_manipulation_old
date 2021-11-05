@@ -84,6 +84,7 @@ class Manipulation
     void closedGripper(trajectory_msgs::JointTrajectory& posture);
 
     //Path Planning and Execution
+    void moveNamed(string poseName);
     void pick(vector<geometry_msgs::Pose> grasp_poses);
     void cartesianPick(std::vector<GraspPose> graspPose_list);
     void cartesianMove(std::vector<geometry_msgs::Pose> pose_list);

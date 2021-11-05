@@ -170,6 +170,13 @@ void Manipulation::cartesianMove(std::vector<geometry_msgs::Pose> pose_list)
   }
 }
 
+void Manipulation::moveNamed(string poseName)
+{
+  move_group_ptr->setNamedTarget(poseName);
+  move_group_ptr->move();
+  ros::Duration(1.0).sleep();
+}
+
 void Manipulation::place(string placePose)
 {
   move_group_ptr->setNamedTarget(placePose);

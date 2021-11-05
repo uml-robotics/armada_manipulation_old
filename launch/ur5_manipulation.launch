@@ -2,8 +2,7 @@
 <launch>
 
   <arg name="serial_no" default="843112074121" />
-  <arg name="kinematics_config" default="$(find ur_description)/config/ur5e/default_kinematics.yaml" doc="Kinematics config file used for calibration correction. This will be used to verify the robot's calibration is matching the robot_description."/>
-  <!-- kinematics_config:=$HOME/my_robot_calibration.yaml -->
+  <arg name="kinematics_config" default="$(find uml_hri_nerve_armada_workstation)/universal_robot/cfg/ur5e_calibration.yaml" doc="Kinematics config file used for calibration correction. This will be used to verify the robot's calibration is matching the robot_description."/>
 
   <include file="$(find uml_hri_nerve_pick_and_place)/launch/gpd_ur5.launch" />
 
@@ -18,7 +17,7 @@
 
   <!-- This transforms each resulting pointcloud into a global reference frame -->
   <node name="wrist_camera_tf2" pkg="tf" type="static_transform_publisher"
-    args="0.0 0.0 0.0 0.0 -1.57 -1.57 /d435 /wrist_camera_link 100" />
+    args="0.0 0.0 0.025 0.0 -1.57 -1.57 /d435 /wrist_camera_link 100" />
 
   <node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen" />
 
@@ -66,5 +65,11 @@
     <arg name="gripper" value="robotiq_2f_85"/>
     <arg name="wrist_cam" value="d435_millibar"/>
   </include>
+
+  <!--
+  <rosparam file="$(find uml_hri_nerve_pick_and_place)/cfg/ur5e_workstation_sim_params.yaml" />
+  <node name="pick_and_place_gazebo" pkg="uml_hri_nerve_pick_and_place" type="pick_and_place_gazebo" output="screen"/>
+  <node name="spawn_object" pkg="uml_hri_nerve_pick_and_place" type="spawn_object.py" output="screen"/>
+  -->
 
 </launch>
