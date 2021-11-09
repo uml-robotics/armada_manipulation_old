@@ -35,6 +35,7 @@
 #include <gpd_ros/GraspConfig.h>
 #include <gazebo_msgs/SpawnModel.h>
 #include <gazebo_msgs/DeleteModel.h>
+#include <robotiq_2f_gripper_control/Robotiq2FGripper_robot_output.h>
 
 using namespace std;
 
@@ -58,7 +59,9 @@ class Manipulation
 
     //Grasping Member Variables
     control_msgs::GripperCommandActionGoal gripper_cmd;
+    robotiq_2f_gripper_control::Robotiq2FGripper_robot_output robotiq_cmd;
     ros::Publisher gripper_command;
+    ros::Publisher robotiq_command;
 
     //Utility Class Pointers
     MoveGroupPtr move_group_ptr;

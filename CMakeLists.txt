@@ -31,6 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_eigen
   tf2_geometry_msgs
   gpd_ros
+  robotiq_2f_gripper_control
 )
 
 include_directories(include

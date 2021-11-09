@@ -29,7 +29,7 @@ Perception::Perception(ros::NodeHandle nodeHandle)
 // Seperate constructor for initialization of subscriber due to passing shared pointers as arguments before creating them
 void Perception::initSubscriber(ros::NodeHandle nodeHandle, string camera_name)
 {
-  string camera_topic = "/" + camera_name + "/depth/points";
+  string camera_topic = "/" + camera_name + "/depth_registered/points";
   camera_sub = nodeHandle.subscribe(camera_topic, 1, &Perception::cameraCallback, this);
   cloud_stored = false;
 }

@@ -25,6 +25,7 @@ Manipulation::Manipulation(ros::NodeHandle nh, std::string planning_group)
   nh.getParam("/end_effector/name", gripper_name);
   string gripperTopic = nh.getNamespace() + "/" + gripper_name + "_gripper_controller/gripper_cmd/goal";
   this->gripper_command = nh.advertise<control_msgs::GripperCommandActionGoal>(gripperTopic, 10);
+  this->robotiq_command = nh.advertise<robotiq_2f_gripper_control::Robotiq2FGripper_robot_output>("/Robotiq2FGripperRobotOutput", 10);
 
   // Establish all pointers
   planning_scene_ptr = PlanningScenePtr(
@@ -39,6 +40,14 @@ Manipulation::Manipulation(ros::NodeHandle nh, std::string planning_group)
 
   move_group_ptr->setNamedTarget("wait");
   move_group_ptr->move();
+
+  // activate the gripper if it's online
+  robotiq_cmd.rACT = 1;
+  robotiq_cmd.rGTO = 1;
+  robotiq_cmd.rSP = 255;
+  robotiq_cmd.rFR = 150;
+  robotiq_command.publish(robotiq_cmd);
+  ros::Duration(0.5).sleep();
 }
 
 void Manipulation::getParams(ros::NodeHandle nh)
@@ -90,8 +99,11 @@ void Manipulation::setGripper(trajectory_msgs::JointTrajectory& posture, double 
 // for robotiq_2f_85 open: 0, closed: ~0.8
 void Manipulation::setGripper(double closeVal)
 {
+  int posVal = closeVal * 255;
   gripper_cmd.goal.command.position = closeVal;
+  robotiq_cmd.rPR = posVal;
   gripper_command.publish(gripper_cmd);
+  robotiq_command.publish(robotiq_cmd);
 }
 
 // plan a single target pose

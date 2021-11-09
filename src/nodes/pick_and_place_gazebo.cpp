@@ -52,26 +52,27 @@ int main(int argc, char** argv)
     std::vector<double> test_pose_y_list;
     test_pose_x_list.clear();
     test_pose_y_list.clear();
+
     test_pose_x_list.push_back(-0.1);
     test_pose_x_list.push_back(-0.1);
     test_pose_x_list.push_back(0.1);
     test_pose_x_list.push_back(0.1);
     test_pose_x_list.push_back(0.0);
 
-    test_pose_y_list.push_back(-0.1);
-    test_pose_y_list.push_back(-0.1);
-    test_pose_y_list.push_back(0.1);
-    test_pose_y_list.push_back(0.1);
+    test_pose_y_list.push_back(-0.2);
+    test_pose_y_list.push_back(-0.2);
     test_pose_y_list.push_back(0.0);
+    test_pose_y_list.push_back(0.0);
+    test_pose_y_list.push_back(-0.1);
 
-    int test_position = rand() % 5 + 1;
+    unsigned int test_position = rand() % 5;
 
     double test_pose_x = {test_pose_x_list[test_position]};
     double test_pose_y = {test_pose_y_list[test_position]};
 
 
     string model_name = "coke_can";
-    string file_path = "/home/brian/.gazebo/models/coke_can/model.sdf";
+    string file_path = "/home/csrobot/.gazebo/models/coke_can/model.sdf";
     geometry_msgs::Pose object_pose;
     object_pose.orientation.w = 1.0;
     object_pose.position.x = test_pose_x;

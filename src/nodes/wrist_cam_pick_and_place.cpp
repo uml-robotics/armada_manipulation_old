@@ -39,15 +39,11 @@ int main(int argc, char** argv)
 
   while(ros::ok())
   {
-    perception.multiCameraSnapshot(nh);
+    perception.wristCameraSnapshot(nh, "wrist_camera");
     perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
-    while (!grasp_cluster.planning_grasp && ros::ok()) {
-      perception.multiCameraSnapshot(nh);
-      perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
-    }
 
     // Perform Pick & Place
-    manipulation.pickandPlace(manipulation.createPickingEEFPoseList(grasp_cluster.get_grasp_candidates()), "wait");
+    // manipulation.pickandPlace(manipulation.createPickingEEFPoseList(grasp_cluster.get_grasp_candidates()), "wait");
 
     // set planning flag to OK for next loop
     grasp_cluster.set_planning(0);
