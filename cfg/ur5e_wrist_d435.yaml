@@ -1,7 +1,5 @@
 camera_names:
-    - "camera_right"
-    - "camera_left"
-    - "camera_rear"
+    - "wrist_camera"
 end_effector: {
     name: "robotiq_2f_85",
     grasp_offset: 0.165,
@@ -9,7 +7,7 @@ end_effector: {
 }
 move_group: {
     planning_group: "manipulator",
-    MaxVelocityScalingFactor: 1.0,
+    MaxVelocityScalingFactor: 0.25,
     PlanningTime: 5,
     NumPlanningAttempts: 5,
     GoalPositionTolerance: 0.001,

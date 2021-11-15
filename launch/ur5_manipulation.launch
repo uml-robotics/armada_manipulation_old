@@ -17,11 +17,11 @@
 
   <!-- This transforms each resulting pointcloud into a global reference frame -->
   <node name="wrist_camera_tf2" pkg="tf" type="static_transform_publisher"
-    args="0.0 0.0 0.025 0.0 -1.57 -1.57 /d435 /wrist_camera_link 100" />
+    args="0.0175 0.0 0.025 0.0 -1.57 -1.57 /d435 /wrist_camera_link 100" />
 
   <node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen" />
 
-  <!-- Run a passthrough filter to clean NaNs -->
+  <!-- Run a passthrough filter to clean NaNs -->l
   <node pkg="nodelet" type="nodelet" name="x_passthrough" args="load pcl/PassThrough pcl_manager" output="screen">
     <remap from="~input" to="/wrist_camera/depth_registered/points" />
     <rosparam>
@@ -66,10 +66,7 @@
     <arg name="wrist_cam" value="d435_millibar"/>
   </include>
 
-  <!--
-  <rosparam file="$(find uml_hri_nerve_pick_and_place)/cfg/ur5e_workstation_sim_params.yaml" />
-  <node name="pick_and_place_gazebo" pkg="uml_hri_nerve_pick_and_place" type="pick_and_place_gazebo" output="screen"/>
-  <node name="spawn_object" pkg="uml_hri_nerve_pick_and_place" type="spawn_object.py" output="screen"/>
-  -->
+  <rosparam file="$(find uml_hri_nerve_pick_and_place)/cfg/ur5e_wrist_d435.yaml" />
+  <node name="wrist_cam_pick_and_place" pkg="uml_hri_nerve_pick_and_place" type="wrist_cam_pick_and_place" output="screen"/>
 
 </launch>
