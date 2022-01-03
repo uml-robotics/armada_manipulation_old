@@ -59,12 +59,14 @@ catkin_package(
 
 add_executable(pick_and_place
 	src/nodes/pick_and_place.cpp
+  src/functions/navigation_class.cpp
 	src/functions/manipulation_class.cpp
         src/functions/perception_class.cpp
         src/functions/pointcloud_filters.cpp
         src/functions/grasp_cluster_class.cpp)
 add_executable(gen3_pick_and_place
         src/nodes/gen3_pick_and_place.cpp
+        src/functions/navigation_class.cpp
         src/functions/manipulation_class.cpp
         src/functions/perception_class.cpp
         src/functions/pointcloud_filters.cpp

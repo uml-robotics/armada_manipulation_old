@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Launch fetch's navigation stack -->
+    <include file="$(find fetch_navigation)/launch/fetch_nav.launch" >
+        <arg name="map_file"  value="/home/csrobot/Desktop/nerve_map/map.yaml"/>
+    </include>
+</launch>

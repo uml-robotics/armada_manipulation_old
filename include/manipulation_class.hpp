@@ -99,9 +99,6 @@ class Manipulation
     //Flag Variables
     bool pose_success;
 
-    //Fetch's Head functions
-    void setHead();
-
     //Gripper Functions
     void setGripper(trajectory_msgs::JointTrajectory& posture, double closeVal);
     void setGripper(double closeVal);
@@ -112,6 +109,7 @@ class Manipulation
     void pickAndPlace(std::vector<GraspPose> grasp_pose_list, string place_pose);
     void setPickingEEFPoseTarget(geometry_msgs::Pose grasp_position_pose, geometry_msgs::Pose grasp_orientation_pose);
     std::tuple<bool, moveit::planning_interface::MoveGroupInterface::Plan> plan(geometry_msgs::Pose grasp_position_pose, geometry_msgs::Pose grasp_orientation_pose);
+    void addCollisions();
 
     //Helper Funcitons
     void storeGpdVals(gpd_ros::GraspConfigList candidates);

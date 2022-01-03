@@ -1,12 +1,10 @@
 <?xml version="1.0"?>
 <launch>
-  <include file="$(find uml_hri_nerve_pick_and_place)/launch/gpd_fetch.launch" />
+  <!-- Launch fetch gazebo sim -->  
 
   <include file="$(find fetch_gazebo)/launch/simple_grasp.launch" /> <!-- Fetch World -->
   <include file="$(find fetch_moveit_config)/launch/move_group.launch" /> <!-- Fetch Move Groups -->
 
   <rosparam file="$(find uml_hri_nerve_pick_and_place)/cfg/fetch_workstation_sim_params.yaml" />
-
-  <node name="pick_and_place" pkg="uml_hri_nerve_pick_and_place" type="pick_and_place" />
 
 </launch>

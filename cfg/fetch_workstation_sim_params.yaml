@@ -8,9 +8,11 @@ end_effector: {
 move_group: {
     planning_group: "arm_with_torso",
     MaxVelocityScalingFactor: 0.50,
-    PlanningTime: 15,
-    NumPlanningAttempts: 5,
+    PlanningTime: 5,
+    NumPlanningAttempts: 10,
     GoalPositionTolerance: 0.001,
     GoalOrientationTolerance: 0.002,
     setPlannerId: "RRTConnect",
 }
+map_file:
+    - "/home/csrobot/Desktop/nerve_map/map.yaml"

@@ -64,19 +64,6 @@ void Manipulation::getParams(ros::NodeHandle nh)
   nh.getParam("/end_effector/pregrasp_dist", pregrasp_dist);
 }
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Fetch Functions
-// Set Fetch's head to aim at a specific point w.r.t its base.
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-void Manipulation::setHead()
-{ 
-  this->head_cmd.goal.target.header.frame_id = "base_link";
-  this->head_cmd.goal.target.point.x = 0.6;
-  this->head_cmd.goal.target.point.y = 0.1;
-  this->head_cmd.goal.target.point.z = 0.7;
-
-  head_command.publish(head_cmd);
-}
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Gripper Functions
@@ -180,6 +167,37 @@ void Manipulation::createPickingEEFPoseList()
   for (unsigned long i = 0; i < n; ++i) {
     graspPoseList[i] = createPickingEEFPose(candidates.grasps[i]);
   }
+}
+
+void Manipulation::addCollisions()
+{
+    std::vector<moveit_msgs::CollisionObject> collision_objects;
+    collision_objects.resize(1);
+
+    // Define the primitive and its dimensions.
+    collision_objects[0].id = "table";
+    collision_objects[0].header.frame_id = "map";
+    collision_objects[0].primitives.resize(1);
+    collision_objects[0].primitives[0].type = collision_objects[0].primitives[0].BOX;
+    collision_objects[0].primitives[0].dimensions.resize(3);
+    collision_objects[0].primitives[0].dimensions[0] = 1.05;
+    collision_objects[0].primitives[0].dimensions[1] = 0.55;
+    collision_objects[0].primitives[0].dimensions[2] = 0.77;
+
+    // Define the pose of the table.
+    collision_objects[0].primitive_poses.resize(1);
+    collision_objects[0].primitive_poses[0].position.x = 0.45;
+    collision_objects[0].primitive_poses[0].position.y = -0.58;
+    collision_objects[0].primitive_poses[0].position.z = 0.42;
+
+    collision_objects[0].primitive_poses[0].orientation.x = 0;
+    collision_objects[0].primitive_poses[0].orientation.y = 0;
+    collision_objects[0].primitive_poses[0].orientation.z = 0.367;
+    collision_objects[0].primitive_poses[0].orientation.w =  0.930;
+
+    collision_objects[0].operation = collision_objects[0].ADD;
+
+    this->planning_scene_ptr->applyCollisionObjects(collision_objects);
 }
 
 GraspPose Manipulation::createPickingEEFPose(gpd_ros::GraspConfig grasp_msg)
