@@ -9,8 +9,11 @@
 #include "navigation_class.hpp"
 
 // NAVIGATION_CLASS CONSTRUCTOR
-Navigation::Navigation()
+Navigation::Navigation(ros::NodeHandle nh)
 {
+  string headTopic = nh.getNamespace() + "/head_controller/point_head/goal"; // For moving fetch's head
+  this->head_command = nh.advertise<control_msgs::PointHeadActionGoal>(headTopic, 10);
+
   move_base_ptr = MoveBasePtr(
       new MoveBaseClient("move_base", true));
   while (!move_base_ptr->waitForServer(ros::Duration(5.0)))
@@ -25,7 +28,7 @@ void Navigation::sendGoal(double x, double y, double ang)
   move_base_msgs::MoveBaseGoal goal;
   goal.target_pose.header.frame_id = "map";
   goal.target_pose.header.stamp = ros::Time::now();
-  
+
   tf2::Quaternion q;
   q.setRPY(0, 0, ang);
   goal.target_pose.pose.position.x = x;
@@ -41,7 +44,7 @@ void Navigation::sendGoal(double x, double y, double ang)
 }
 
 // Set Fetch's head to aim at a specific point w.r.t the map.
-void Manipulation::setHead()
+void Navigation::setHead()
 {
   this->head_cmd.goal.target.header.frame_id = "map";
   this->head_cmd.goal.target.point.x = 0.45;

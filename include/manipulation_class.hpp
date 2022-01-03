@@ -19,7 +19,6 @@
 #include <moveit_msgs/DisplayTrajectory.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <control_msgs/GripperCommandActionGoal.h>
-#include <control_msgs/PointHeadActionGoal.h>
 #include <ros/ros.h>
 #include <geometry_msgs/Pose.h>
 #include <array>
@@ -62,10 +61,6 @@ class Manipulation
     //Constructor
     Manipulation(ros::NodeHandle nodeHandle, std::string planning_group);
     void getParams(ros::NodeHandle nh);
-
-    //Fetch's Head member variables
-    control_msgs::PointHeadActionGoal head_cmd;
-    ros::Publisher head_command;
 
     //Grasping Member Variables
     control_msgs::GripperCommandActionGoal gripper_cmd;

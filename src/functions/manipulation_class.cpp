@@ -24,9 +24,7 @@ Manipulation::Manipulation(ros::NodeHandle nh, std::string planning_group)
   string gripper_name;
   nh.getParam("/end_effector/name", gripper_name);
   string gripperTopic = nh.getNamespace() + "/gripper_controller/gripper_action/goal";  // Fetch has a different gripper action topic
-  string headTopic = nh.getNamespace() + "/head_controller/point_head/goal";  // For moving fetch's head
   this->gripper_command = nh.advertise<control_msgs::GripperCommandActionGoal>(gripperTopic, 10);
-  this->head_command = nh.advertise<control_msgs::PointHeadActionGoal>(headTopic, 10);
   // Establish all pointers
   planning_scene_ptr = PlanningScenePtr(
         new moveit::planning_interface::PlanningSceneInterface());

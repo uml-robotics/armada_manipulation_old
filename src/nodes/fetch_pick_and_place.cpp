@@ -36,7 +36,7 @@ int main(int argc, char** argv)
   manipulation.setGripper(1);
   manipulation.place("retract");
 
-  Navigation nav;
+  Navigation nav(nh);
   nav.sendGoal(-1.379, 0.266, 0);
 
   Perception perception(nh);
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
 
   nav.sendGoal(0, 0, -44);
   ros::Duration(1).sleep();
-  manipulation.setHead(); // Temp: Move Fetch's head so it can see the table
+  nav.setHead(); // Temp: Move Fetch's head so it can see the table
   manipulation.addCollisions();
 
   while(ros::ok())
