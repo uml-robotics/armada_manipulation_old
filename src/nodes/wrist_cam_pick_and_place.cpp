@@ -35,28 +35,30 @@ int main(int argc, char** argv)
   Perception perception(nh);
   Grasp_Cluster grasp_cluster(nh);
 
-  ros::Duration(5.0).sleep();
+  ros::Duration(15.0).sleep();
 
   while(ros::ok())
   {
     // reinitialize cloud list
+    //grasp_cluster.set_planning(1);
     perception.cloud_list.resize(0);
 
     manipulation.moveNamed("robot_left");
-    ros::Duration(2.5).sleep();
+    ros::Duration(6.0).sleep();
     perception.wristCameraSnapshot(nh, "wrist_camera");
-    ros::Duration(1.0).sleep();
+    ros::Duration(0.5).sleep();
 
     manipulation.moveNamed("robot_right");
-    ros::Duration(2.5).sleep();
+    ros::Duration(6.0).sleep();
     perception.wristCameraSnapshot(nh, "wrist_camera");
-    ros::Duration(1.0).sleep();
+    ros::Duration(0.5).sleep();
 
     manipulation.moveNamed("wait");
-    ros::Duration(2.5).sleep();
+    ros::Duration(6.0).sleep();
     perception.wristCameraSnapshot(nh, "wrist_camera");
-    ros::Duration(1.0).sleep();
+    ros::Duration(0.5).sleep();
 
+    //grasp_cluster.set_planning(0);
     perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
     ros::Duration(5.0).sleep();
 
