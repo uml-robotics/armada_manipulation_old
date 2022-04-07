@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 
 
     string model_name = "coke_can";
-    string file_path = "/home/csrobot/.gazebo/models/coke_can/model.sdf";
+    string file_path = "/home/brian/.gazebo/models/coke_can/model.sdf";
     geometry_msgs::Pose object_pose;
     object_pose.orientation.w = 1.0;
     object_pose.position.x = test_pose_x;

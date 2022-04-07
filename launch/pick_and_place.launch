@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="kinematics_config" default="$(find uml_hri_nerve_armada_workstation)/universal_robot/cfg/ur5e_calibration.yaml" doc="Kinematics config file used for calibration correction. This will be used to verify the robot's calibration is matching the robot_description."/>
+  <arg name="robot_ip" default="" />
+  <arg name="gripper_ip" default="10.10.10.42" />
+  <arg name="robot_description_file" default="" />
+  <arg name="limited" default="" />
+  <arg name="model" default="" />
+  <arg name="sim_workstation" default="" />
+  <arg name="wrist_camera" default="" />
+  <arg anme="max_dist" default="" />
+
+  <!-- Realsense args -->
+  <arg name="sn1" default="843112074121" doc="Serial number of 1st device" />
+  <arg name="sn2" default="" doc="Serial number of 2nd device" />
+  <arg name="sn3" default="" doc="Serial number of 3rd device" />
+  <arg name="sn4" default="" doc="Serial number of 4th device" />
+
+  <!-- Hardware args -->
+  <arg name="robot_make" default="" />
+  <arg name="robot_model" default="" />
+  <arg name="gripper_make" default="" />
+  <arg name="gripper_model" default="" />
+
+  <include file="$(find uml_hri_nerve_pick_and_place)/launch/passthrough_filter.launch" unless="$(eval max_dist == '')" >
+    <arg name="wrist_cam" value="$(arg wrist_cam)" />
+    <arg anme="max_dist" value="$(arg max_dist)" />
+  </include>
+
+  <node name="Robotiq2FGripperTcpNode" pkg="robotiq_2f_gripper_control" type="Robotiq2FGripperTcpNode.py" args="$(arg gripper_ip)"/>
+
+  <!-- Launch realsense camera nodes with actual camera (serial number typically on back of device) -->
+  <include file="$(find realsense2_camera)/launch/rs_rgbd.launch" unless="$(eval wrist_cam == '')">
+    <arg name="serial_no" value="$(arg serial_no)" unless="$(eval serial_no == '')"/>
+    <arg name="camera" value="wrist_camera" />
+  </include>
+
+  <include file="$(find armada_description)/$(arg robot_make)/launch/$(arg robot_model)_bringup.launch" unless="$(eval robot_ip == '')">
+    <arg name="robot_ip" value="10.10.10.152"/>
+    <arg name="kinematics_config" value="$(arg kinematics_config)"/>
+    <arg name="robot_description_file" value="$(find armada_description)/$(arg robot_make)/urdf/$(arg robot_model)_robot_d435_millibar_robotiq_2f_85_workstation.urdf.xacro" unless="$(eval wrist_cam == '')"/>
+    <arg name="limited" value="false"/>
+    <arg name="model" value="ur5"/>
+    <arg name="sim_workstation" value="true"/>
+    <arg name="gripper_make" value="robotiq" />
+    <arg name="gripper_model" value="r2f85" />
+    <arg name="wrist_cam" value="d435_millibar"/>
+  </include>
+
+  <include file="$(find armada_gazebo)/universal_robot/launch/gazebo_universal_robot.launch" if="$(eval robot_ip == '')">
+    <arg name="robot_model" value="ur5"/>
+    <arg name="sim_workstation" value="true"/>
+    <arg name="gripper_make" value="robotiq" />
+    <arg name="gripper_model" value="r2f85" />
+    <arg name="wrist_cam" value="d435_millibar"/>  <!-- d435_millibar -->
+  </include>
+
+  <rosparam file="$(find uml_hri_nerve_pick_and_place)/cfg/ur5e_wrist_d435.yaml" />
+  <node name="wrist_cam_pick_and_place" pkg="uml_hri_nerve_pick_and_place" type="wrist_cam_pick_and_place" output="screen"/>
+
+</launch>

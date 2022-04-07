@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="$(arg wrist_cam)" default="" />
+  <arg name="$(arg max_dist)" default="0.5" />
+
+  <!-- This transforms each resulting pointcloud into a global reference frame -->
+  <node name="$(arg wrist_cam)_tf2" pkg="tf" type="static_transform_publisher"
+    args="0.0175 0.0 0.025 0.0 -1.57 -1.57 /d435 /$(arg wrist_cam)_link 100" />
+
+  <node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen" />
+
+  <!-- Run a passthrough filter to clean NaNs -->l
+  <node pkg="nodelet" type="nodelet" name="$(anon x_passthrough)" args="load pcl/PassThrough pcl_manager" output="screen">
+    <remap from="~input" to="/$(arg wrist_cam)/depth_registered/points" />
+    <rosparam>
+      filter_field_name: x
+      filter_limit_min: -$(arg max_dist)
+      filter_limit_max: $(arg max_dist)
+      filter_limit_negative: False
+    </rosparam>
+  </node>
+
+  <!-- Run a passthrough filter to clean NaNs -->
+  <node pkg="nodelet" type="nodelet" name="$(anon y_passthrough)" args="load pcl/PassThrough pcl_manager" output="screen">
+    <remap from="~input" to="/x_passthrough/output" />
+    <rosparam>
+      filter_field_name: y
+      filter_limit_min: -$(arg max_dist)
+      filter_limit_max: $(arg max_dist)
+      filter_limit_negative: False
+    </rosparam>
+  </node>
+
+  <!-- Run a passthrough filter to clean NaNs -->
+  <node pkg="nodelet" type="nodelet" name="$(anon z_passthrough)" args="load pcl/PassThrough pcl_manager" output="screen">
+    <remap from="~input" to="/y_passthrough/output" />
+    <remap from="~output" to="/$(arg wrist_cam)/depth_registered/points" />
+    <rosparam>
+      filter_field_name: z
+      filter_limit_min: -$(arg max_dist)
+      filter_limit_max: $(arg max_dist)
+      filter_limit_negative: False
+    </rosparam>
+  </node>
+
+</launch>
