@@ -4,9 +4,8 @@
   <arg name="serial_no" default="843112074121" />
   <arg name="kinematics_config" default="$(find armada_description)/universal_robot/cfg/ur5e_calibration.yaml" doc="Kinematics config file used for calibration correction. This will be used to verify the robot's calibration is matching the robot_description."/>
 
-  <include file="$(find uml_hri_nerve_pick_and_place)/launch/gpd_ur5.launch" />
-
-  <node name="Robotiq2FGripperTcpNode" pkg="robotiq_2f_gripper_control" type="Robotiq2FGripperTcpNode.py" args="10.10.10.42"/>
+  <!-- <node name="Robotiq2FGripperRtuNode" pkg="robotiq_2f_gripper_control" type="Robotiq2FGripperRtuNode.py" args="/tmp/ttyUR"/> -->
+  <!-- <node name="Robotiq2FGripperSimpleController" pkg="robotiq_2f_gripper_control" type="Robotiq2FGripperSimpleController.py" /> -->
 
   <!-- Launch realsense camera nodes with actual camera (serial number typically on back of device) -->
   <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
@@ -30,9 +29,16 @@
     <arg name="gripper_make" value="robotiq"/>
     <arg name="gripper_model" value="r2f85"/>
     <arg name="wrist_cam" value="d435_millibar"/>
+    <arg name="use_tool_communication" value="true"/>
+    <arg name="tool_voltage" value="24"/>
+    <arg name="tool_parity" value="0"/>
+    <arg name="tool_baud_rate" value="115200"/>
+    <arg name="tool_stop_bits" value="1"/>
+    <arg name="tool_rx_idle_chars" value="1.5"/>
+    <arg name="tool_tx_idle_chars" value="3.5"/>
+    <arg name="tool_device_name" value="/tmp/ttyUR"/>
+    <arg name="tool_tcp_port" value="54321"/>
   </include>
 
   <rosparam file="$(find uml_hri_nerve_pick_and_place)/cfg/ur5e_wrist_d435.yaml" />
-  <node name="wrist_cam_pick_and_place" pkg="uml_hri_nerve_pick_and_place" type="wrist_cam_pick_and_place" output="screen"/>
-
 </launch>
