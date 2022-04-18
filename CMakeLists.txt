@@ -57,18 +57,6 @@ catkin_package(
   message_runtime
 )
 
-add_executable(pick_and_place
-	src/nodes/pick_and_place.cpp
-	src/functions/manipulation_class.cpp
-        src/functions/perception_class.cpp
-        src/functions/pointcloud_filters.cpp
-        src/functions/grasp_cluster_class.cpp)
-add_executable(gen3_pick_and_place
-        src/nodes/gen3_pick_and_place.cpp
-        src/functions/manipulation_class.cpp
-        src/functions/perception_class.cpp
-        src/functions/pointcloud_filters.cpp
-        src/functions/grasp_cluster_class.cpp)
 add_executable(fetch_pick_and_place
         src/nodes/fetch_pick_and_place.cpp
         src/functions/navigation_class.cpp
@@ -76,8 +64,6 @@ add_executable(fetch_pick_and_place
         src/functions/perception_class.cpp
         src/functions/pointcloud_filters.cpp
         src/functions/grasp_cluster_class.cpp)
-target_link_libraries(pick_and_place ${catkin_LIBRARIES})
-target_link_libraries(gen3_pick_and_place ${catkin_LIBRARIES})
 target_link_libraries(fetch_pick_and_place ${catkin_LIBRARIES})
 
 add_executable(capture_pointcloud_service src/services/capture_pointcloud_service.cpp)

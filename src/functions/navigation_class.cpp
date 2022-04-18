@@ -46,9 +46,9 @@ void Navigation::sendGoal(double x, double y, double ang)
 // Set Fetch's head to aim at a specific point w.r.t the map.
 void Navigation::setHead()
 {
-  this->head_cmd.goal.target.header.frame_id = "map";
-  this->head_cmd.goal.target.point.x = 0.45;
-  this->head_cmd.goal.target.point.y = -0.55;
+  this->head_cmd.goal.target.header.frame_id = "base_link";
+  this->head_cmd.goal.target.point.x = 0.5;
+  this->head_cmd.goal.target.point.y = 0;
   this->head_cmd.goal.target.point.z = 0.75;
 
   head_command.publish(head_cmd);

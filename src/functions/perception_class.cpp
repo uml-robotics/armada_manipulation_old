@@ -116,13 +116,13 @@ PointCloud<PointXYZRGB> Perception::concatenateClouds(std::vector<PointCloud<Poi
   PassThrough<PointXYZRGB> pass_w;
   pass_w.setInputCloud (temp_cloud);
   pass_w.setFilterFieldName ("x");
-  pass_w.setFilterLimits (-0.75, 0.75);
+  pass_w.setFilterLimits (-2, 2);
   pass_w.filter(*temp_cloud);
 
   PassThrough<PointXYZRGB> pass_y;
   pass_y.setInputCloud (temp_cloud);
   pass_y.setFilterFieldName ("y");
-  pass_y.setFilterLimits (-0.50, 0.50);
+  pass_y.setFilterLimits (-2, 2);
   pass_y.filter(*temp_cloud);
   
   PassThrough<PointXYZRGB> pass_z;

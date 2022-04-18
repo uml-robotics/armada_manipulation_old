@@ -136,9 +136,12 @@ void Manipulation::place(string placePose)
   ros::Duration(0.5).sleep();
 }
 
-void Manipulation::pickAndPlace(std::vector<GraspPose> graspPoseList, string placePose)
+void Manipulation::pickAndPlace(std::vector<GraspPose> graspPoseList, string placePose, Navigation &nav)
 {
   pick(graspPoseList);
+  this->place("tuck");
+  nav.sendGoal(-1.04679000378,-0.0925005674362, -2.2717481);
+  this->addCollisions();
   place(placePose);
 
   setGripper(1);  // Only 0 or 1 for Fetch's gripper
@@ -170,7 +173,7 @@ void Manipulation::createPickingEEFPoseList()
 void Manipulation::addCollisions()
 {
     std::vector<moveit_msgs::CollisionObject> collision_objects;
-    collision_objects.resize(1);
+    collision_objects.resize(3);
 
     // Define the primitive and its dimensions.
     collision_objects[0].id = "table";
@@ -178,22 +181,77 @@ void Manipulation::addCollisions()
     collision_objects[0].primitives.resize(1);
     collision_objects[0].primitives[0].type = collision_objects[0].primitives[0].BOX;
     collision_objects[0].primitives[0].dimensions.resize(3);
-    collision_objects[0].primitives[0].dimensions[0] = 1.05;
-    collision_objects[0].primitives[0].dimensions[1] = 0.55;
-    collision_objects[0].primitives[0].dimensions[2] = 0.77;
+    collision_objects[0].primitives[0].dimensions[0] = 0.6;
+    collision_objects[0].primitives[0].dimensions[1] = 1.07;
+    collision_objects[0].primitives[0].dimensions[2] = 0.80;
 
     // Define the pose of the table.
     collision_objects[0].primitive_poses.resize(1);
-    collision_objects[0].primitive_poses[0].position.x = 0.45;
-    collision_objects[0].primitive_poses[0].position.y = -0.58;
+    collision_objects[0].primitive_poses[0].position.x = -1.51706802845;
+    collision_objects[0].primitive_poses[0].position.y = 1.14764738083;
     collision_objects[0].primitive_poses[0].position.z = 0.42;
+
+    //0.45, -0.58, 0.42
+    //0,0,0.367,0.930
 
     collision_objects[0].primitive_poses[0].orientation.x = 0;
     collision_objects[0].primitive_poses[0].orientation.y = 0;
-    collision_objects[0].primitive_poses[0].orientation.z = 0.367;
-    collision_objects[0].primitive_poses[0].orientation.w =  0.930;
+    collision_objects[0].primitive_poses[0].orientation.z = 0.924409835965;
+    collision_objects[0].primitive_poses[0].orientation.w = 0.38140064915;
 
     collision_objects[0].operation = collision_objects[0].ADD;
+
+    // Define the primitive and its dimensions.
+    collision_objects[1].id = "table2";
+    collision_objects[1].header.frame_id = "map";
+    collision_objects[1].primitives.resize(1);
+    collision_objects[1].primitives[0].type = collision_objects[1].primitives[0].BOX;
+    collision_objects[1].primitives[0].dimensions.resize(3);
+    collision_objects[1].primitives[0].dimensions[0] = 1.1;
+    collision_objects[1].primitives[0].dimensions[1] = 0.6;
+    collision_objects[1].primitives[0].dimensions[2] = 1.15;
+
+    // Define the pose of the table.
+    collision_objects[1].primitive_poses.resize(1);
+    collision_objects[1].primitive_poses[0].position.x = -1.92327606678;
+    collision_objects[1].primitive_poses[0].position.y = -0.322113543749;
+    collision_objects[1].primitive_poses[0].position.z = 0.42;
+
+    collision_objects[1].primitive_poses[0].orientation.x = 0;
+    collision_objects[1].primitive_poses[0].orientation.y = 0;
+    collision_objects[1].primitive_poses[0].orientation.z = 0.924409835965;
+    collision_objects[1].primitive_poses[0].orientation.w = 0.38140064915;
+    
+
+
+    //0.45, -0.58, 0.42
+    //0,0,0.367,0.930
+    collision_objects[1].operation = collision_objects[0].ADD;
+
+    // Define the primitive and its dimensions.
+    collision_objects[2].id = "head_box";
+    collision_objects[2].header.frame_id = "base_link";
+    collision_objects[2].primitives.resize(1);
+    collision_objects[2].primitives[0].type = collision_objects[2].primitives[0].BOX;
+    collision_objects[2].primitives[0].dimensions.resize(3);
+    collision_objects[2].primitives[0].dimensions[0] = 0.5;
+    collision_objects[2].primitives[0].dimensions[1] = 0.5;
+    collision_objects[2].primitives[0].dimensions[2] = 0.5;
+
+    // Define the pose of the table.
+    collision_objects[2].primitive_poses.resize(1);
+    collision_objects[2].primitive_poses[0].position.x = 0;
+    collision_objects[2].primitive_poses[0].position.y = 0;
+    collision_objects[2].primitive_poses[0].position.z = 1.8;
+
+    collision_objects[2].primitive_poses[0].orientation.x = 0;
+    collision_objects[2].primitive_poses[0].orientation.y = 0;
+    collision_objects[2].primitive_poses[0].orientation.z = 0;
+    collision_objects[2].primitive_poses[0].orientation.w = 0;
+    
+    collision_objects[2].operation = collision_objects[0].ADD;
+
+
 
     this->planning_scene_ptr->applyCollisionObjects(collision_objects);
 }

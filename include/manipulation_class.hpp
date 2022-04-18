@@ -32,6 +32,7 @@
 #include <std_msgs/Int8.h>
 #include <gpd_ros/GraspConfigList.h>
 #include <gpd_ros/GraspConfig.h>
+#include "navigation_class.hpp"
 
 using namespace std;
 
@@ -101,7 +102,7 @@ class Manipulation
     //Functions
     void pick(std::vector<GraspPose> grasp_pose_list);
     void place(string place_pose);
-    void pickAndPlace(std::vector<GraspPose> grasp_pose_list, string place_pose);
+    void pickAndPlace(std::vector<GraspPose> grasp_pose_list, string place_pose, Navigation &nav);
     void setPickingEEFPoseTarget(geometry_msgs::Pose grasp_position_pose, geometry_msgs::Pose grasp_orientation_pose);
     std::tuple<bool, moveit::planning_interface::MoveGroupInterface::Plan> plan(geometry_msgs::Pose grasp_position_pose, geometry_msgs::Pose grasp_orientation_pose);
     void addCollisions();

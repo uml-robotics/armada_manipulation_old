@@ -7,9 +7,9 @@ end_effector: {
 }
 move_group: {
     planning_group: "arm_with_torso",
-    MaxVelocityScalingFactor: 0.50,
+    MaxVelocityScalingFactor: 0.65,
     PlanningTime: 5,
-    NumPlanningAttempts: 10,
+    NumPlanningAttempts: 5,
     GoalPositionTolerance: 0.001,
     GoalOrientationTolerance: 0.002,
     setPlannerId: "RRTConnect",

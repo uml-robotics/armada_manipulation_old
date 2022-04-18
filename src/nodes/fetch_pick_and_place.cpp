@@ -20,7 +20,6 @@ int main(int argc, char** argv)
   ros::NodeHandle nh;
   ros::AsyncSpinner spinner(4);
   spinner.start();
-  ros::Duration(4).sleep(); // Temp fix: need time for Fetch's head point action to start
 
   // Ros Service Member Variables
   ros::ServiceClient clearOctomap;
@@ -34,23 +33,24 @@ int main(int argc, char** argv)
 
   Manipulation manipulation(nh, planning_group);
   manipulation.setGripper(1);
-  manipulation.place("retract");
+  manipulation.place("tuck");
+  manipulation.addCollisions();
 
   Navigation nav(nh);
-  nav.sendGoal(-1.379, 0.266, 0);
 
   Perception perception(nh);
   Grasp_Cluster grasp_cluster(nh);
 
-  ros::Duration(3.0).sleep();
-
-  nav.sendGoal(0, 0, -44);
-  ros::Duration(1).sleep();
-  nav.setHead(); // Temp: Move Fetch's head so it can see the table
-  manipulation.addCollisions();
+  ROS_WARN("Starting...");
 
   while(ros::ok())
   {
+    nav.sendGoal(-0.680366873741, -0.661050796509, 0.7864987);
+    nav.sendGoal(-1.05996143818, 0.711649179459, 2.3564987);
+    nav.setHead(); // Temp: Move Fetch's head so it can see the table
+    manipulation.addCollisions();
+
+    ros::Duration(2).sleep();
     perception.multiCameraSnapshot(nh);
     perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
     
@@ -63,14 +63,15 @@ int main(int argc, char** argv)
     manipulation.storeGpdVals(grasp_cluster.get_grasp_candidates());
     manipulation.createPickingEEFPoseList();
     
+    
     // Perform Pick & Place
-    manipulation.pickAndPlace(manipulation.graspPoseList, "place");
+    manipulation.pickAndPlace(manipulation.graspPoseList, "place", nav);
 
     // set planning flag to OK for next loop
     grasp_cluster.set_planning(0);
-    manipulation.place("retract");
+    manipulation.place("tuck");
 
-    ros::Duration(5.0).sleep();
+    ros::Duration(1.0).sleep();
     manipulation.getParams(nh);
     
   }  
