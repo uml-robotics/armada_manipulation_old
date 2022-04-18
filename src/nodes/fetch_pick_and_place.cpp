@@ -32,10 +32,9 @@ int main(int argc, char** argv)
   nh.getParam("/move_group/planning_group", planning_group);
 
   Manipulation manipulation(nh, planning_group);
-  manipulation.setGripper(1);
-  manipulation.place("tuck");
-  manipulation.addCollisions();
+  Manipulation arm_torso(nh, "arm_with_torso");
 
+  manipulation.removeCollision("head_box");
   Navigation nav(nh);
 
   Perception perception(nh);
@@ -45,36 +44,42 @@ int main(int argc, char** argv)
 
   while(ros::ok())
   {
+    arm_torso.place("retract");
+    ros::Duration(1).sleep();
+
+    manipulation.setGripper(1);
     nav.sendGoal(-0.680366873741, -0.661050796509, 0.7864987);
     nav.sendGoal(-1.05996143818, 0.711649179459, 2.3564987);
     nav.setHead(); // Temp: Move Fetch's head so it can see the table
-    manipulation.addCollisions();
+    manipulation.addCollisionObjects();
 
     ros::Duration(2).sleep();
+
     perception.multiCameraSnapshot(nh);
     perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
-    
     while (!grasp_cluster.planning_grasp && ros::ok()) {
       perception.multiCameraSnapshot(nh);
       perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
     }
     
-    // Store grasp pose values and create a list of picking poses
-    manipulation.storeGpdVals(grasp_cluster.get_grasp_candidates());
-    manipulation.createPickingEEFPoseList();
-    
-    
     // Perform Pick & Place
-    manipulation.pickAndPlace(manipulation.graspPoseList, "place", nav);
+    bool success = manipulation.pickandPlace(manipulation.createPickingEEFPoseList(grasp_cluster.get_grasp_candidates()),"place");
 
     // set planning flag to OK for next loop
     grasp_cluster.set_planning(0);
-    manipulation.place("tuck");
 
+    if(success)
+    {
+      nav.sendGoal(-1.04679000378,-0.0925005674362, -2.2717481);
+      manipulation.place("place");
+      manipulation.setGripper(1);
+      ros::Duration(1.0).sleep();
+      manipulation.removeCollision("head_box");
+      arm_torso.place("retract");
+    }
     ros::Duration(1.0).sleep();
     manipulation.getParams(nh);
-    
-  }  
+    }  
 
   return 0;
 }

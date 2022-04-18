@@ -31,6 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_eigen
   tf2_geometry_msgs
   gpd_ros
+  robotiq_2f_gripper_control
 )
 
 include_directories(include
@@ -44,6 +45,7 @@ include_directories(include
 add_service_files(
   FILES
   CapturePointCloud.srv
+  SpawnObject.srv
 )
 
 generate_messages(
@@ -69,7 +71,3 @@ target_link_libraries(fetch_pick_and_place ${catkin_LIBRARIES})
 add_executable(capture_pointcloud_service src/services/capture_pointcloud_service.cpp)
 target_link_libraries(capture_pointcloud_service ${catkin_LIBRARIES})
 add_dependencies(capture_pointcloud_service uml_hri_nerve_pick_and_place_gencpp)
-
-#add_executable(add_two_ints_client src/nodes/add_two_ints_client.cpp)
-#target_link_libraries(add_two_ints_client ${catkin_LIBRARIES})
-#add_dependencies(add_two_ints_client uml_hri_nerve_pick_and_place_gencpp)

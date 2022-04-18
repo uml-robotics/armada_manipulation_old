@@ -6,13 +6,15 @@ end_effector: {
     pregrasp_dist: 0.25,
 }
 move_group: {
-    planning_group: "arm_with_torso",
-    MaxVelocityScalingFactor: 0.65,
+    planning_group: "arm",
+    MaxVelocityScalingFactor: 0.5,
     PlanningTime: 5,
     NumPlanningAttempts: 5,
     GoalPositionTolerance: 0.001,
     GoalOrientationTolerance: 0.002,
     setPlannerId: "RRTConnect",
+    jump_threshold: 5.0,
+    eef_step: 0.15,
 }
 map_file:
     - "/home/csrobot/Desktop/nerve_map/map.yaml"

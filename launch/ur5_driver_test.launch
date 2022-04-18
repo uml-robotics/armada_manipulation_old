@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="serial_no" default="843112074121" />
+  <arg name="kinematics_config" default="$(find armada_description)/universal_robot/cfg/ur5e_calibration.yaml" doc="Kinematics config file used for calibration correction. This will be used to verify the robot's calibration is matching the robot_description."/>
+
+  <!-- <node name="Robotiq2FGripperRtuNode" pkg="robotiq_2f_gripper_control" type="Robotiq2FGripperRtuNode.py" args="/tmp/ttyUR"/> -->
+  <!-- <node name="Robotiq2FGripperSimpleController" pkg="robotiq_2f_gripper_control" type="Robotiq2FGripperSimpleController.py" /> -->
+
+  <!-- Launch realsense camera nodes with actual camera (serial number typically on back of device) -->
+  <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
+    <arg name="serial_no" value="$(arg serial_no)"/>
+    <!-- rename the camera -->
+    <arg name="camera" value="wrist_camera" />
+  </include>
+
+  <!-- This transforms each resulting pointcloud into a global reference frame -->
+  <node name="wrist_camera_tf2" pkg="tf" type="static_transform_publisher"
+    args="0.0175 0.0 0.025 0.0 -1.57 -1.57 /d435 /wrist_camera_link 100" />
+
+  <include file="$(find armada_bringup)/universal_robot/launch/ur5e_bringup.launch" >
+    <arg name="robot_ip" value="10.10.10.152"/>
+    <arg name="kinematics_config" value="$(arg kinematics_config)"/>
+    <arg name="robot_description_file" value="$(find armada_description)/universal_robot/urdf/ur5e_robot_d435_millibar_r2f85_workstation.urdf.xacro"/>
+    <arg name="limited" value="false"/>
+    <arg name="robot_make" default="universal_robot" />
+    <arg name="robot_model" default="ur5e" />
+    <arg name="sim_workstation" value="true"/>
+    <arg name="gripper_make" value="robotiq"/>
+    <arg name="gripper_model" value="r2f85"/>
+    <arg name="wrist_cam" value="d435_millibar"/>
+    <arg name="use_tool_communication" value="true"/>
+    <arg name="tool_voltage" value="24"/>
+    <arg name="tool_parity" value="0"/>
+    <arg name="tool_baud_rate" value="115200"/>
+    <arg name="tool_stop_bits" value="1"/>
+    <arg name="tool_rx_idle_chars" value="1.5"/>
+    <arg name="tool_tx_idle_chars" value="3.5"/>
+    <arg name="tool_device_name" value="/tmp/ttyUR"/>
+    <arg name="tool_tcp_port" value="54321"/>
+  </include>
+
+  <rosparam file="$(find uml_hri_nerve_pick_and_place)/cfg/ur5e_wrist_d435.yaml" />
+</launch>

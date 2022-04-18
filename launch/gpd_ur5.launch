@@ -4,7 +4,7 @@
   <!-- Arguments -->
   <arg name="namespace" default="" />
 
-  <node name="detect_grasps" pkg="gpd_ros" type="detect_grasps" output="screen" respawn="true">
+  <node name="detect_grasps" pkg="gpd_ros" type="detect_grasps" respawn="true">
 
     <!-- If sequential importance sampling is used (default: false) -->
     <param name="use_importance_sampling" value="false" />
