@@ -52,7 +52,7 @@ void Perception::sac_segmentation(PointCloud<PointXYZRGB>::Ptr cloud)
   seg.setModelType (SACMODEL_PLANE);
   seg.setMethodType (SAC_RANSAC);
   seg.setMaxIterations (1000);
-  seg.setDistanceThreshold (0.01);
+  seg.setDistanceThreshold (0.02);
   seg.setInputCloud (cloud);
   seg.segment (*inliers_plane, *coefficients_plane);
 

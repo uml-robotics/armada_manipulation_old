@@ -13,7 +13,7 @@ Perception::Perception(ros::NodeHandle nodeHandle)
 {
   string nodeNamespace = nodeHandle.getNamespace();
   string gpdTopic = nodeNamespace + "/combined_cloud";
-  combined_cloud_pub = nodeHandle.advertise<sensor_msgs::PointCloud2>(gpdTopic, 1);
+  combined_cloud_pub = nodeHandle.advertise<sensor_msgs::PointCloud2>(gpdTopic, 10);
 
   transform_listener_ptr = TransformListenerPtr(
         new tf::TransformListener());
@@ -116,22 +116,22 @@ PointCloud<PointXYZRGB> Perception::concatenateClouds(std::vector<PointCloud<Poi
   PassThrough<PointXYZRGB> pass_w;
   pass_w.setInputCloud (temp_cloud);
   pass_w.setFilterFieldName ("x");
-  pass_w.setFilterLimits (-2, 2);
+  pass_w.setFilterLimits (-1, 1);
   pass_w.filter(*temp_cloud);
 
   PassThrough<PointXYZRGB> pass_y;
   pass_y.setInputCloud (temp_cloud);
   pass_y.setFilterFieldName ("y");
-  pass_y.setFilterLimits (-2, 2);
+  pass_y.setFilterLimits (-1, 1);
   pass_y.filter(*temp_cloud);
   
   PassThrough<PointXYZRGB> pass_z;
   pass_z.setInputCloud (temp_cloud);
   pass_z.setFilterFieldName ("z");
-  pass_z.setFilterLimits (0.83, 6.3);
+  pass_z.setFilterLimits (0.79, 6.3);
   pass_z.filter(*temp_cloud);
 
-  //sac_segmentation(temp_cloud);
+  sac_segmentation(temp_cloud);
 
   return *temp_cloud;
 }

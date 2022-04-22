@@ -33,10 +33,11 @@
 #include <std_msgs/Int8.h>
 #include <gpd_ros/GraspConfigList.h>
 #include <gpd_ros/GraspConfig.h>
-#include "navigation_class.hpp"
 #include <gazebo_msgs/SpawnModel.h>
 #include <gazebo_msgs/DeleteModel.h>
 #include <robotiq_2f_gripper_control/Robotiq2FGripper_robot_output.h>
+
+#include "navigation_class.hpp"
 
 using namespace std;
 
@@ -48,6 +49,7 @@ struct GraspPose{
   geometry_msgs::Pose pre;
   geometry_msgs::Pose grasp;
   geometry_msgs::Pose post;
+  float score;
 };
 
 class Manipulation
@@ -55,8 +57,10 @@ class Manipulation
   public:
 
     //Constructor
-    Manipulation(ros::NodeHandle nodeHandle, std::string planning_group);
+    Manipulation(ros::NodeHandle nodeHandle, std::string planning_group, Logger* log);
     void getParams(ros::NodeHandle nh);
+
+    Logger* logger;
 
     //Grasping Member Variables
     control_msgs::GripperCommandActionGoal gripper_cmd;

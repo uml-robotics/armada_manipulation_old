@@ -18,8 +18,9 @@
 // ********************************************************************************************
 
 // MANIPULATION CLASS CONSTRUCTOR
-Manipulation::Manipulation(ros::NodeHandle nh, std::string planning_group)
+Manipulation::Manipulation(ros::NodeHandle nh, std::string planning_group, Logger* log)
 {
+  this->logger = log;
   // Instantiate publisher for gripper commands
   string gripper_name;
   nh.getParam("/end_effector/name", gripper_name);
@@ -117,7 +118,7 @@ bool Manipulation::plan(geometry_msgs::Pose grasp_pose, moveit::planning_interfa
 double Manipulation::cartesianPlan(std::vector<geometry_msgs::Pose> pose_list, moveit::planning_interface::MoveGroupInterface::Plan& my_plan)
 {
   moveit_msgs::RobotTrajectory trajectory;
-  double success = move_group_ptr->computeCartesianPath(pose_list, eef_step, jump_threshold, trajectory);
+  double success = move_group_ptr->computeCartesianPath(pose_list, eef_step, jump_threshold, trajectory, true);
   success *= 100;
   my_plan.trajectory_ = trajectory;
   ros::Duration(0.5).sleep();
@@ -132,10 +133,12 @@ bool Manipulation::cartesianPick(std::vector<GraspPose> graspPose_list)
   moveit::planning_interface::MoveGroupInterface::Plan pre_and_grasp_pose_plan;
   moveit::planning_interface::MoveGroupInterface::Plan retreat_pose_plan;
 
-  bool temp_flag;
 
   unsigned long n = graspPose_list.size();
+  this->logger->data.max_attempts=n;
+
   for (unsigned long i = 0; i < n; ++i) {
+    bool temp_flag = 0;
     pre_and_grasp_pose_list.clear();
     pre_and_grasp_pose_list.push_back(graspPose_list[i].pre);
     pre_and_grasp_pose_list.push_back(graspPose_list[i].grasp);
@@ -144,8 +147,10 @@ bool Manipulation::cartesianPick(std::vector<GraspPose> graspPose_list)
     // get cartesian plan for pre and actual grasp, if good execute and close gripper
     double pre_and_grasp_success = cartesianPlan(pre_and_grasp_pose_list, pre_and_grasp_pose_plan);
     
-    ROS_WARN("%f", pre_and_grasp_success);
+    ROS_WARN("Pre/Grasp Success: %f", pre_and_grasp_success);
     if (pre_and_grasp_success >= 100) {
+      ROS_WARN_STREAM(graspPose_list[i].score);
+      this->logger->data.score=graspPose_list[i].score;
       move_group_ptr->execute(pre_and_grasp_pose_plan);
       ros::Duration(1).sleep();
       setGripper(0);
@@ -155,17 +160,19 @@ bool Manipulation::cartesianPick(std::vector<GraspPose> graspPose_list)
     // get cartesian plan for post grasp, if good execute
     if (temp_flag) {
       double post_success = cartesianPlan(retreat_pose_list, retreat_pose_plan);
-      ROS_WARN("%f", post_success);
-
+      ROS_WARN("Post Success: %f", post_success);
       if (post_success >= 100) {
         move_group_ptr->execute(retreat_pose_plan);
         ros::Duration(1).sleep();
-        return true;
       }
+      this->logger->data.grasp_attempts=i;
+      return true; // Pre grasp plan found, move to retract regardless of post grasp success
     }
+
     ros::Duration(0.5).sleep();
+    
   }
-  return false;
+  return false; // No plan found
 }
 
 void Manipulation::cartesianMove(std::vector<geometry_msgs::Pose> pose_list)
@@ -205,13 +212,16 @@ void Manipulation::place(string placePose)
 
 bool Manipulation::pickandPlace(std::vector<GraspPose> graspPose_list, string placePose)
 {
+  this->logger->startTime();
   bool success = cartesianPick(graspPose_list);
 
-  //retract pose after pickup
+  //retract pose if pickup happened
   if (success)
   {
     this->place("retract");
   }
+  this->logger->endTime();
+  this->logger->data.time_pick_retract = this->logger->getDuration();
   return success;
 }
 
@@ -310,27 +320,26 @@ void Manipulation::place(geometry_msgs::Pose place_pose)
 
 void Manipulation::addCollisionObjects()
 {
+  ros::Duration(0.5).sleep();
   std::vector<moveit_msgs::CollisionObject> collision_objects;
   collision_objects.resize(4);
 
   // Define the primitive and its dimensions.
-  collision_objects[0].id = "table";
+  collision_objects[0].id = "table_pick";
   collision_objects[0].header.frame_id = "map";
   collision_objects[0].primitives.resize(1);
   collision_objects[0].primitives[0].type = collision_objects[0].primitives[0].BOX;
   collision_objects[0].primitives[0].dimensions.resize(3);
-  collision_objects[0].primitives[0].dimensions[0] = 0.62;
-  collision_objects[0].primitives[0].dimensions[1] = 1.07;
-  collision_objects[0].primitives[0].dimensions[2] = 0.82;
+  collision_objects[0].primitives[0].dimensions[0] = 0.60;
+  collision_objects[0].primitives[0].dimensions[1] = 1.09;
+  collision_objects[0].primitives[0].dimensions[2] = 0.78;
 
   // Define the pose of the table.
   collision_objects[0].primitive_poses.resize(1);
   collision_objects[0].primitive_poses[0].position.x = -1.51706802845;
   collision_objects[0].primitive_poses[0].position.y = 1.14764738083;
-  collision_objects[0].primitive_poses[0].position.z = 0.42;
+  collision_objects[0].primitive_poses[0].position.z = 0.39;
 
-  //0.45, -0.58, 0.42
-  //0,0,0.367,0.930
 
   collision_objects[0].primitive_poses[0].orientation.x = 0;
   collision_objects[0].primitive_poses[0].orientation.y = 0;
@@ -340,20 +349,20 @@ void Manipulation::addCollisionObjects()
   collision_objects[0].operation = collision_objects[0].ADD;
 
   // Define the primitive and its dimensions.
-  collision_objects[1].id = "table2";
+  collision_objects[1].id = "table_place";
   collision_objects[1].header.frame_id = "map";
   collision_objects[1].primitives.resize(1);
   collision_objects[1].primitives[0].type = collision_objects[1].primitives[0].BOX;
   collision_objects[1].primitives[0].dimensions.resize(3);
-  collision_objects[1].primitives[0].dimensions[0] = 1.1;
-  collision_objects[1].primitives[0].dimensions[1] = 0.6;
-  collision_objects[1].primitives[0].dimensions[2] = 1.15;
+  collision_objects[1].primitives[0].dimensions[0] = 1.13;
+  collision_objects[1].primitives[0].dimensions[1] = 0.62;
+  collision_objects[1].primitives[0].dimensions[2] = 1.2;
 
   // Define the pose of the table.
   collision_objects[1].primitive_poses.resize(1);
   collision_objects[1].primitive_poses[0].position.x = -1.92327606678;
   collision_objects[1].primitive_poses[0].position.y = -0.322113543749;
-  collision_objects[1].primitive_poses[0].position.z = 0.42;
+  collision_objects[1].primitive_poses[0].position.z = 0.44;
 
   collision_objects[1].primitive_poses[0].orientation.x = 0;
   collision_objects[1].primitive_poses[0].orientation.y = 0;
@@ -367,20 +376,20 @@ void Manipulation::addCollisionObjects()
   collision_objects[1].operation = collision_objects[0].ADD;
 
   // Define the primitive and its dimensions.
-  collision_objects[2].id = "head_box";
-  collision_objects[2].header.frame_id = "head_pan_link";
+  collision_objects[2].id = "projector_frame";
+  collision_objects[2].header.frame_id = "base_link";
   collision_objects[2].primitives.resize(1);
   collision_objects[2].primitives[0].type = collision_objects[2].primitives[0].BOX;
   collision_objects[2].primitives[0].dimensions.resize(3);
-  collision_objects[2].primitives[0].dimensions[0] = 0.44;
-  collision_objects[2].primitives[0].dimensions[1] = 0.55;
-  collision_objects[2].primitives[0].dimensions[2] = 0.6;
+  collision_objects[2].primitives[0].dimensions[0] = 0.06;
+  collision_objects[2].primitives[0].dimensions[1] = 0.20;
+  collision_objects[2].primitives[0].dimensions[2] = 0.75;
 
   // Define the pose of the box.
   collision_objects[2].primitive_poses.resize(1);
-  collision_objects[2].primitive_poses[0].position.x = 0;
+  collision_objects[2].primitive_poses[0].position.x = -0.31;
   collision_objects[2].primitive_poses[0].position.y = 0;
-  collision_objects[2].primitive_poses[0].position.z = 0.3;
+  collision_objects[2].primitive_poses[0].position.z = 1.345;
 
   collision_objects[2].primitive_poses[0].orientation.x = 0;
   collision_objects[2].primitive_poses[0].orientation.y = 0;
@@ -389,22 +398,22 @@ void Manipulation::addCollisionObjects()
   
   collision_objects[2].operation = collision_objects[0].ADD;
 
-  /*
+  
   // Define the primitive and its dimensions.
-  collision_objects[3].id = "base_box";
-  collision_objects[3].header.frame_id = "base_link";
+  collision_objects[3].id = "head_box";
+  collision_objects[3].header.frame_id = "head_pan_link";
   collision_objects[3].primitives.resize(1);
   collision_objects[3].primitives[0].type = collision_objects[2].primitives[0].BOX;
   collision_objects[3].primitives[0].dimensions.resize(3);
-  collision_objects[3].primitives[0].dimensions[0] = 0.55;
-  collision_objects[3].primitives[0].dimensions[1] = 0.55;
-  collision_objects[3].primitives[0].dimensions[2] = 0.35;
+  collision_objects[3].primitives[0].dimensions[0] = 0.38;
+  collision_objects[3].primitives[0].dimensions[1] = 0.35;
+  collision_objects[3].primitives[0].dimensions[2] = 0.15;
 
   // Define the pose of the table.
   collision_objects[3].primitive_poses.resize(1);
-  collision_objects[3].primitive_poses[0].position.x = 0;
+  collision_objects[3].primitive_poses[0].position.x = 0.1;
   collision_objects[3].primitive_poses[0].position.y = 0;
-  collision_objects[3].primitive_poses[0].position.z = 0.19;
+  collision_objects[3].primitive_poses[0].position.z = 0.1;
 
   collision_objects[3].primitive_poses[0].orientation.x = 0;
   collision_objects[3].primitive_poses[0].orientation.y = 0;
@@ -412,7 +421,6 @@ void Manipulation::addCollisionObjects()
   collision_objects[3].primitive_poses[0].orientation.w = 0;
   
   collision_objects[3].operation = collision_objects[0].ADD;
-  */
 
 
   this->planning_scene_ptr->applyCollisionObjects(collision_objects);
@@ -454,7 +462,7 @@ GraspPose Manipulation::createPickingEEFPose(gpd_ros::GraspConfig grasp_msg)
   }
 
   // Fetch specific rotaion values
-  tf::Transform tf_grasp_odom_(tf::Quaternion(-0.5, -0.5, -0.5, 0.5), tf::Vector3(0, 0, -grasp_offset));
+  tf::Transform tf_grasp_odom_(tf::Quaternion(0.707, 0, 0.707, 0), tf::Vector3(0, 0, -grasp_offset));
   tf::Transform tf_grasp_odom = tf_base_odom * tf_grasp_base * tf_grasp_odom_;
   tf::poseTFToMsg(tf_grasp_odom, thisGrasp.grasp);
 
@@ -462,9 +470,11 @@ GraspPose Manipulation::createPickingEEFPose(gpd_ros::GraspConfig grasp_msg)
   tf::Transform tf_pregrasp_odom = tf_grasp_odom * tf_pregrasp_odom_;
   tf::poseTFToMsg(tf_pregrasp_odom, thisGrasp.pre);
 
-  tf::Transform tf_aftergrasp_odom_(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0, 0, -pregrasp_dist));
+  tf::Transform tf_aftergrasp_odom_(tf::Quaternion(0, 0, 0, 1), tf::Vector3(-pregrasp_dist, 0, 0));
   tf::Transform tf_aftergrasp_odom = tf_grasp_odom * tf_aftergrasp_odom_;
   tf::poseTFToMsg(tf_aftergrasp_odom, thisGrasp.post);
+
+  thisGrasp.score = grasp_msg.score.data;
 
   return thisGrasp;
 }

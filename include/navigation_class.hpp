@@ -12,6 +12,7 @@
 #include <move_base_msgs/MoveBaseAction.h>
 #include <ros/ros.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include "logger.hpp"
 
 using namespace std;
 
@@ -24,7 +25,9 @@ class Navigation
     MoveBasePtr move_base_ptr;
 
     //Constructor
-    Navigation(ros::NodeHandle nodeHandle);
+    Navigation(ros::NodeHandle nodeHandle, Logger* log);
+
+    Logger* logger;
 
     //Navigation helper functions
     void setHead();

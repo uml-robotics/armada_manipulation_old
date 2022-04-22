@@ -9,8 +9,9 @@
 #include "navigation_class.hpp"
 
 // NAVIGATION_CLASS CONSTRUCTOR
-Navigation::Navigation(ros::NodeHandle nh)
+Navigation::Navigation(ros::NodeHandle nh, Logger* log)
 {
+  this->logger = log;
   string headTopic = nh.getNamespace() + "/head_controller/point_head/goal"; // For moving fetch's head
   this->head_command = nh.advertise<control_msgs::PointHeadActionGoal>(headTopic, 10);
 
@@ -49,7 +50,7 @@ void Navigation::setHead()
   this->head_cmd.goal.target.header.frame_id = "base_link";
   this->head_cmd.goal.target.point.x = 0.5;
   this->head_cmd.goal.target.point.y = 0;
-  this->head_cmd.goal.target.point.z = 0.75;
+  this->head_cmd.goal.target.point.z = 0.55;
 
   head_command.publish(head_cmd);
 }
