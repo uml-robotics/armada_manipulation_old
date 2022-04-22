@@ -65,7 +65,8 @@ add_executable(fetch_pick_and_place
         src/functions/manipulation_class.cpp
         src/functions/perception_class.cpp
         src/functions/pointcloud_filters.cpp
-        src/functions/grasp_cluster_class.cpp)
+        src/functions/grasp_cluster_class.cpp
+        src/functions/logger.cpp)
 target_link_libraries(fetch_pick_and_place ${catkin_LIBRARIES})
 
 add_executable(capture_pointcloud_service src/services/capture_pointcloud_service.cpp)
