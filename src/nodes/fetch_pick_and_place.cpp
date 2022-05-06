@@ -43,17 +43,23 @@ int main(int argc, char** argv)
   Grasp_Cluster grasp_cluster(nh);
 
   ROS_WARN("Starting...");
-  manipulation.addCollisionObjects();
   torso.place("retract");
+  manipulation.addCollisionObjects();
   nav.sendGoal(-0.680366873741, -0.661050796509, 0.7864987); // HOME
 
   while(ros::ok())
   {
+    log.open();
+    manipulation.removeCollision("head_box");
     torso.place("retract");
     manipulation.setGripper(1);
 
     log.startTime(); // home to pick time, nav
-    nav.sendGoal(-1.05996143818, 0.711649179459, 2.3564987); // PICK
+
+    nav.sendGoal(-1.060, 0.712, 2.356); // PICK 1
+    //nav.sendGoal(-1.420, 0.460, 1.363); // PICK 2
+    //nav.sendGoal(-0.773, 1.065, -2.986); // PICK 3
+
     log.endTime(); // home to pick time, nav
     log.data.time_home_pick = log.getDuration();
 
@@ -70,15 +76,14 @@ int main(int argc, char** argv)
     
     // Perform Pick & Place
     bool success = manipulation.pickandPlace(manipulation.createPickingEEFPoseList(grasp_cluster.get_grasp_candidates()),"place");
-    log.startTime(); // pick to retract, manip
-
+    log.startTime(); // nav
     // set planning flag to OK for next loop
     grasp_cluster.set_planning(0);
     log.data.planning_success = success;
     if(success)
     {
       nav.sendGoal(-1.04679000378,-0.0925005674362, -2.2717481); // PLACE
-      log.endTime(); // pick to retract, manip
+      log.endTime(); // retract to place nav
       log.data.time_retract_place = log.getDuration();
 
       manipulation.addCollisionObjects();
@@ -88,6 +93,7 @@ int main(int argc, char** argv)
       manipulation.setGripper(1); // Open gripper
       ros::Duration(1.0).sleep();
 
+      manipulation.removeCollision("head_box");
       torso.place("retract");
       log.endTime(); // place to dropped, manip
       log.data.time_place_dropped = log.getDuration();
@@ -99,8 +105,12 @@ int main(int argc, char** argv)
     }
     ros::Duration(1.0).sleep();
     manipulation.getParams(nh);
+    log.endTime();
     log.writeData();
+    log.close();
     }
+
+    log.close();
 
   return 0;
 }
