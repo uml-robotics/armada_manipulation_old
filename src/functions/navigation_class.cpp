@@ -6,6 +6,13 @@
 // Methods for mobile manipulation
 // ********************************************************************************************
 
+/* 
+MODIFIED fetch_navigation package params:
+  Reduced costmap robot_radius from 0.3 -> 0.1 since the arena area is already pretty small
+  Lowered acceleration from 0.35 -> 0.15 and max x_vel 1 -> 0.5
+*/
+
+
 #include "navigation_class.hpp"
 
 // NAVIGATION_CLASS CONSTRUCTOR
