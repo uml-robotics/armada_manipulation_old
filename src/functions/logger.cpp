@@ -2,10 +2,20 @@
 
 Logger::Logger(ros::NodeHandle nh)
 {
-    this->logfile.open("/home/csrobot/Desktop/Test_Logs/data.csv", std::ios_base::app);
+    this->open();
 }
 
 Logger::~Logger()
+{
+    this->close();
+}
+
+void Logger::open()
+{
+    this->logfile.open("/home/csrobot/Desktop/Test_Logs/data.csv", std::ios_base::app);
+}
+
+void Logger::close()
 {
     this->logfile.close();
 }

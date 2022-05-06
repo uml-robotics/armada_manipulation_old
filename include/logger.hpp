@@ -34,4 +34,6 @@ public:
     double getDuration();
     void writeHeaders();
     void writeData();
+    void open();
+    void close();
 };
