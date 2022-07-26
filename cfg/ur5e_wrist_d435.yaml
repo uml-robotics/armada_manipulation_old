@@ -1,0 +1,18 @@
+camera_names:
+    - "wrist_camera"
+end_effector: {
+    name: "robotiq_2f_85",
+    grasp_offset: 0.165,
+    pregrasp_dist: 0.10,
+}
+move_group: {
+    planning_group: "manipulator",
+    MaxVelocityScalingFactor: 0.25,
+    PlanningTime: 5,
+    NumPlanningAttempts: 5,
+    GoalPositionTolerance: 0.001,
+    GoalOrientationTolerance: 0.002,
+    setPlannerId: "RRTConnect",
+    jump_threshold: 5.0,
+    eef_step: 0.01,
+}

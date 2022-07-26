@@ -20,6 +20,7 @@
 #include <pcl/sample_consensus/method_types.h>
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/segmentation/extract_clusters.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/extract_indices.h>
@@ -54,60 +55,52 @@ class Perception
     //Publishers & Subscribers
     ros::Publisher combined_cloud_pub;
     ros::Subscriber camera_sub;
-    ros::Subscriber base_camera_sub;
-    ros::Subscriber wrist_camera_sub;
-    ros::Subscriber left_camera_sub;
-    ros::Subscriber right_camera_sub;
-    ros::Subscriber rear_camera_sub;
 
     //Subscriber Callbacks
-    void camera_callback(const sensor_msgs::PointCloud2 msg);
-    void base_camera_callback(const sensor_msgs::PointCloud2 msg);
-    void wrist_camera_callback(const sensor_msgs::PointCloud2 msg);
-    void left_camera_callback(const sensor_msgs::PointCloud2 msg);
-    void right_camera_callback(const sensor_msgs::PointCloud2 msg);
-    void rear_camera_callback(const sensor_msgs::PointCloud2 msg);
+    void cameraCallback(const sensor_msgs::PointCloud2 msg);
+
+    //Listener Pointers
+    TransformListenerPtr transform_listener_ptr;
 
     //Generic PCL Filters
-    PointCloud<PointXYZRGB> voxelgrid_filter(PointCloud<PointXYZRGB>::Ptr cloud);
-    PointCloud<PointXYZRGB> sac_segmentation(PointCloud<PointXYZRGB>::Ptr cloud);
-    PointCloud<PointNormal> move_least_squares(PointCloud<PointXYZRGB>::Ptr cloud);
+    void voxelgrid_filter(PointCloud<PointXYZRGB>::Ptr cloud, PointCloud<PointXYZRGB>::Ptr filtered_cloud);
+    void sac_segmentation(PointCloud<PointXYZRGB>::Ptr cloud);
+    void move_least_squares(PointCloud<PointXYZRGB>::Ptr cloud);
     void computeNormals(PointCloud<PointXYZRGB>::Ptr cloud, PointCloud<Normal>::Ptr cloud_normals);
     void extractNormals(PointCloud<Normal>::Ptr cloud_normals, PointIndices::Ptr inliers_plane);
+    int cluster_extraction(PointCloud<PointXYZRGB>::Ptr cloud);
 
   public:
 
     //Constructor
     Perception(ros::NodeHandle nodeHandle);
 
-    //Subscriber initializer
-    void init_subscriber(ros::NodeHandle nodeHandle, string camera_name);
+    //Generic Subscriber initializer
+    void initSubscriber(ros::NodeHandle nodeHandle, string camera_name);
 
     //Node Member Variables
-    string nodeNamespace;
 
     // Topic Name Member Variables
     std::vector<string> camera_names;
-    string gpdTopic;
+    int camera_count;
 
     //Pointcloud Member Variables
-    PointCloud<PointXYZRGB> combined_cloud;
-    PointCloud<PointXYZRGB> current_cloud;
+    sensor_msgs::PointCloud2 current_cloud;
     std::vector<PointCloud<PointXYZRGB>> cloud_list;
-
-    //Pointer Variables
-    TransformListenerPtr transform_listener_ptr;
 
     //Flag Variables
     bool pointcloud_found;
+    bool cloud_stored;
 
     //Functions
-    void publish_combined_cloud();
-    void concatenate_clouds(std::vector<PointCloud<PointXYZRGB>> cloud_snapshot_list, bool save_pcd);
-    void workstation_snapshot(ros::NodeHandle nodeHandle);
+    void publishCombinedCloud(PointCloud<PointXYZRGB> cloud);
+    void multiCameraSnapshot(ros::NodeHandle nodeHandle);
+    void wristCameraSnapshot(ros::NodeHandle nodeHandle, string camera_name);
+    PointCloud<PointXYZRGB> transformCloud(sensor_msgs::PointCloud2 cloud);
+    PointCloud<PointXYZRGB> concatenateClouds(std::vector<PointCloud<PointXYZRGB>> cloud_snapshot_list);
 
     //Helper Function/Function Wrappers
-    void generate_workspace_pointcloud(ros::NodeHandle nodeHandle);
+    void savePointCloudToDisk(PointCloud<PointXYZRGB> cloud, string filepath);
 };  
 
 #endif // PERCEPTION_CLASS
