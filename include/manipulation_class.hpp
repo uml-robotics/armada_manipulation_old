@@ -37,6 +37,8 @@
 #include <gazebo_msgs/DeleteModel.h>
 #include <robotiq_2f_gripper_control/Robotiq2FGripper_robot_output.h>
 
+#include "navigation_class.hpp"
+
 using namespace std;
 
 typedef boost::shared_ptr<moveit::planning_interface::MoveGroupInterface> MoveGroupPtr;
@@ -47,6 +49,7 @@ struct GraspPose{
   geometry_msgs::Pose pre;
   geometry_msgs::Pose grasp;
   geometry_msgs::Pose post;
+  float score;
 };
 
 class Manipulation
@@ -54,8 +57,10 @@ class Manipulation
   public:
 
     //Constructor
-    Manipulation(ros::NodeHandle nodeHandle, std::string planning_group);
+    Manipulation(ros::NodeHandle nodeHandle, std::string planning_group, Logger* log);
     void getParams(ros::NodeHandle nh);
+
+    Logger* logger;
 
     //Grasping Member Variables
     control_msgs::GripperCommandActionGoal gripper_cmd;
@@ -89,20 +94,21 @@ class Manipulation
     //Path Planning and Execution
     void moveNamed(string poseName);
     void pick(vector<geometry_msgs::Pose> grasp_poses);
-    void cartesianPick(std::vector<GraspPose> graspPose_list);
+    bool cartesianPick(std::vector<GraspPose> graspPose_list);
     void cartesianMove(std::vector<geometry_msgs::Pose> pose_list);
     void place(string place_pose);
     void place(geometry_msgs::Pose place_pose);
-    void pickandPlace(std::vector<GraspPose> graspPose_list, string place_pose);
+    bool pickandPlace(std::vector<GraspPose> graspPose_list, string place_pose);
     bool plan(geometry_msgs::Pose grasp_pose, moveit::planning_interface::MoveGroupInterface::Plan& my_plan);
     double cartesianPlan(std::vector<geometry_msgs::Pose> pose_list, moveit::planning_interface::MoveGroupInterface::Plan& my_plan);
+    void removeCollision(string object_ids);
 
     //Grasp Position and Orientation Generation
     std::vector<GraspPose> createPickingEEFPoseList(gpd_ros::GraspConfigList candidates);
     GraspPose createPickingEEFPose(gpd_ros::GraspConfig grasp_msg);
 
     //Scene Functions
-    void addCollisionObjects(moveit::planning_interface::PlanningSceneInterface& planning_scene_interface);
+    void addCollisionObjects();
 
 };
 

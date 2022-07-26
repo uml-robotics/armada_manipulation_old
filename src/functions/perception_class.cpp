@@ -13,7 +13,7 @@ Perception::Perception(ros::NodeHandle nodeHandle)
 {
   string nodeNamespace = nodeHandle.getNamespace();
   string gpdTopic = nodeNamespace + "/combined_cloud";
-  combined_cloud_pub = nodeHandle.advertise<sensor_msgs::PointCloud2>(gpdTopic, 1);
+  combined_cloud_pub = nodeHandle.advertise<sensor_msgs::PointCloud2>(gpdTopic, 10);
 
   transform_listener_ptr = TransformListenerPtr(
         new tf::TransformListener());
@@ -29,7 +29,7 @@ Perception::Perception(ros::NodeHandle nodeHandle)
 // Seperate constructor for initialization of subscriber due to passing shared pointers as arguments before creating them
 void Perception::initSubscriber(ros::NodeHandle nodeHandle, string camera_name)
 {
-  string camera_topic = "/" + camera_name + "/depth_registered/points";
+  string camera_topic = "/" + camera_name + "/depth/points";  // Fetch sim has a different camera topic
   camera_sub = nodeHandle.subscribe(camera_topic, 1, &Perception::cameraCallback, this);
   cloud_stored = false;
 }
@@ -85,15 +85,15 @@ PointCloud<PointXYZRGB> Perception::transformCloud(sensor_msgs::PointCloud2 clou
   // wait for and then apply transform
   try
   {
-    transform_listener_ptr->waitForTransform("world", temp_cloud.header.frame_id, stamp, ros::Duration(10.0));
-    transform_listener_ptr->lookupTransform("world", temp_cloud.header.frame_id, stamp, transform);
+    transform_listener_ptr->waitForTransform("base_link", temp_cloud.header.frame_id, stamp, ros::Duration(10.0));
+    transform_listener_ptr->lookupTransform("base_link", temp_cloud.header.frame_id, stamp, transform);
   } catch (tf::TransformException err)
   {
     ROS_ERROR("%s", err.what());
   }
 
   // transform the cloud to the world frame but use the same pointcloud object
-  pcl_ros::transformPointCloud("world", temp_cloud, temp_cloud, *transform_listener_ptr);
+  pcl_ros::transformPointCloud("base_link", temp_cloud, temp_cloud, *transform_listener_ptr);
 
   return temp_cloud;
 }
@@ -112,23 +112,23 @@ PointCloud<PointXYZRGB> Perception::concatenateClouds(std::vector<PointCloud<Poi
     }
   }
 
-  // Passthrough filter to limit to work area
+  // Passthrough filter to limit to work area (fetch sim)
   PassThrough<PointXYZRGB> pass_w;
   pass_w.setInputCloud (temp_cloud);
   pass_w.setFilterFieldName ("x");
-  pass_w.setFilterLimits (-0.575, 0.575);
+  pass_w.setFilterLimits (-1, 1);
   pass_w.filter(*temp_cloud);
 
   PassThrough<PointXYZRGB> pass_y;
   pass_y.setInputCloud (temp_cloud);
   pass_y.setFilterFieldName ("y");
-  pass_y.setFilterLimits (-0.425, 0.425);
+  pass_y.setFilterLimits (-1, 1);
   pass_y.filter(*temp_cloud);
   
   PassThrough<PointXYZRGB> pass_z;
   pass_z.setInputCloud (temp_cloud);
   pass_z.setFilterFieldName ("z");
-  pass_z.setFilterLimits (0.8, 1.18);
+  pass_z.setFilterLimits (0.79, 6.3);
   pass_z.filter(*temp_cloud);
 
   sac_segmentation(temp_cloud);

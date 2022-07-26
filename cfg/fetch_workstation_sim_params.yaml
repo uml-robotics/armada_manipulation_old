@@ -1,0 +1,20 @@
+camera_names: 
+    - "head_camera"
+end_effector: {
+    name: "gripper",
+    grasp_offset: 0.15,
+    pregrasp_dist: 0.15,
+}
+move_group: {
+    planning_group: "arm",
+    MaxVelocityScalingFactor: 0.60,
+    PlanningTime: 5,
+    NumPlanningAttempts: 5,
+    GoalPositionTolerance: 0.001,
+    GoalOrientationTolerance: 0.002,
+    setPlannerId: "RRTConnect",
+    jump_threshold: 2.5,
+    eef_step: 0.15,
+}
+map_file:
+    - "/home/csrobot/Desktop/nerve_map/map.yaml"

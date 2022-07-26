@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Launch grasping and navigation files for mobile manipulation -->
+    <include file="$(find fetch_moveit_config)/launch/move_group.launch" />
+    <include file="$(find uml_hri_nerve_pick_and_place)/launch/fetch_nav.launch" /> <!-- Fetch Move Groups -->
+</launch>
