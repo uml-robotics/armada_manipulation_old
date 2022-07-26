@@ -1,4 +1,5 @@
-# This repository is being archived to maintain work but halt development. Please instead refer to newer maipulation packages in the uml-robotics gihub library such as: https://github.com/uml-robotics/armada_behaviors which is in development as of the time of this writing (07/22)
+# This repository is being archived 
+Please instead refer to newer maipulation packages in the uml-robotics gihub library such as: https://github.com/uml-robotics/armada_behaviors which is in development as of the time of this writing (07/22)
 
 
 
