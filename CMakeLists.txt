@@ -31,6 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_eigen
   tf2_geometry_msgs
   gpd_ros
+  robotiq_2f_gripper_control
 )
 
 include_directories(include
@@ -44,6 +45,7 @@ include_directories(include
 add_service_files(
   FILES
   CapturePointCloud.srv
+  SpawnObject.srv
 )
 
 generate_messages(
@@ -58,8 +60,8 @@ catkin_package(
 )
 
 add_executable(pick_and_place
-	src/nodes/pick_and_place.cpp
-	src/functions/manipulation_class.cpp
+        src/nodes/pick_and_place.cpp
+        src/functions/manipulation_class.cpp
         src/functions/perception_class.cpp
         src/functions/pointcloud_filters.cpp
         src/functions/grasp_cluster_class.cpp)
@@ -69,13 +71,23 @@ add_executable(gen3_pick_and_place
         src/functions/perception_class.cpp
         src/functions/pointcloud_filters.cpp
         src/functions/grasp_cluster_class.cpp)
+add_executable(pick_and_place_gazebo
+        src/nodes/pick_and_place_gazebo.cpp
+        src/functions/manipulation_class.cpp
+        src/functions/perception_class.cpp
+        src/functions/pointcloud_filters.cpp
+        src/functions/grasp_cluster_class.cpp)
+add_executable(wrist_cam_pick_and_place
+        src/nodes/wrist_cam_pick_and_place.cpp
+        src/functions/manipulation_class.cpp
+        src/functions/perception_class.cpp
+        src/functions/pointcloud_filters.cpp
+        src/functions/grasp_cluster_class.cpp)
 target_link_libraries(pick_and_place ${catkin_LIBRARIES})
 target_link_libraries(gen3_pick_and_place ${catkin_LIBRARIES})
+target_link_libraries(pick_and_place_gazebo ${catkin_LIBRARIES})
+target_link_libraries(wrist_cam_pick_and_place ${catkin_LIBRARIES})
 
 add_executable(capture_pointcloud_service src/services/capture_pointcloud_service.cpp)
 target_link_libraries(capture_pointcloud_service ${catkin_LIBRARIES})
 add_dependencies(capture_pointcloud_service uml_hri_nerve_pick_and_place_gencpp)
-
-#add_executable(add_two_ints_client src/nodes/add_two_ints_client.cpp)
-#target_link_libraries(add_two_ints_client ${catkin_LIBRARIES})
-#add_dependencies(add_two_ints_client uml_hri_nerve_pick_and_place_gencpp)

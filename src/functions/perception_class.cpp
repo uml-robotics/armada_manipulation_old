@@ -29,7 +29,7 @@ Perception::Perception(ros::NodeHandle nodeHandle)
 // Seperate constructor for initialization of subscriber due to passing shared pointers as arguments before creating them
 void Perception::initSubscriber(ros::NodeHandle nodeHandle, string camera_name)
 {
-  string camera_topic = "/" + camera_name + "/depth/points";
+  string camera_topic = "/" + camera_name + "/depth_registered/points";
   camera_sub = nodeHandle.subscribe(camera_topic, 1, &Perception::cameraCallback, this);
   cloud_stored = false;
 }
@@ -128,7 +128,7 @@ PointCloud<PointXYZRGB> Perception::concatenateClouds(std::vector<PointCloud<Poi
   PassThrough<PointXYZRGB> pass_z;
   pass_z.setInputCloud (temp_cloud);
   pass_z.setFilterFieldName ("z");
-  pass_z.setFilterLimits (0.8, 1.3);
+  pass_z.setFilterLimits (0.8, 1.18);
   pass_z.filter(*temp_cloud);
 
   sac_segmentation(temp_cloud);

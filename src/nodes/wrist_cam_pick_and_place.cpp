@@ -35,16 +35,32 @@ int main(int argc, char** argv)
   Perception perception(nh);
   Grasp_Cluster grasp_cluster(nh);
 
-  ros::Duration(5.0).sleep();
+  ros::Duration(15.0).sleep();
 
   while(ros::ok())
   {
-    perception.multiCameraSnapshot(nh);
+    // reinitialize cloud list
+    //grasp_cluster.set_planning(1);
+    perception.cloud_list.resize(0);
+
+    manipulation.moveNamed("robot_left");
+    ros::Duration(6.0).sleep();
+    perception.wristCameraSnapshot(nh, "wrist_camera");
+    ros::Duration(0.5).sleep();
+
+    manipulation.moveNamed("robot_right");
+    ros::Duration(6.0).sleep();
+    perception.wristCameraSnapshot(nh, "wrist_camera");
+    ros::Duration(0.5).sleep();
+
+    manipulation.moveNamed("wait");
+    ros::Duration(6.0).sleep();
+    perception.wristCameraSnapshot(nh, "wrist_camera");
+    ros::Duration(0.5).sleep();
+
+    //grasp_cluster.set_planning(0);
     perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
-    while (!grasp_cluster.planning_grasp && ros::ok()) {
-      perception.multiCameraSnapshot(nh);
-      perception.publishCombinedCloud(perception.concatenateClouds(perception.cloud_list));
-    }
+    ros::Duration(5.0).sleep();
 
     // Perform Pick & Place
     manipulation.pickandPlace(manipulation.createPickingEEFPoseList(grasp_cluster.get_grasp_candidates()), "wait");
@@ -54,8 +70,6 @@ int main(int argc, char** argv)
     ros::Duration(5.0).sleep();
     manipulation.getParams(nh);
 
-    cout << "Waiting before performing another operation . . .\n";
-    system("pause");
   }
 
   return 0;

@@ -1,0 +1,7 @@
+string model_name
+string file_path
+string robot_namespace
+geometry_msgs/Pose object_pose
+string reference_frame
+---
+int64 success

@@ -13,7 +13,7 @@
 int main(int argc, char** argv)
 {
   // Initialize node
-  ros::init(argc,argv,"pick_and_place_node");
+  ros::init(argc,argv,"gen3_2_pick_and_place_node");
   ros::NodeHandle nh;
   ros::AsyncSpinner spinner(4);
   spinner.start();
@@ -30,6 +30,7 @@ int main(int argc, char** argv)
   string planning_group, wrist_cam;
   nh.getParam("/move_group/planning_group", planning_group);
   nh.getParam("/camera_names", wrist_cam);
+
   Manipulation manipulation(nh, planning_group);
   Perception perception(nh);
   Grasp_Cluster grasp_cluster(nh);
@@ -41,7 +42,7 @@ int main(int argc, char** argv)
   ros::Duration(4.5).sleep();
   perception.wristCameraSnapshot(nh, wrist_cam);
   while (perception.cloud_list[0].size() == 0) {
-    // wait
+    // waitplace_custom
   }
   manipulation.place("left_snapshot");
   ros::Duration(4.5).sleep();
@@ -57,11 +58,9 @@ int main(int argc, char** argv)
   while(grasp_cluster.candidates.grasps.size() == 0) {
     //wait
   }
-  manipulation.storeGpdVals(grasp_cluster.get_grasp_candidates());
-  manipulation.createPickingEEFPoseList();
 
   // Perform Pick & Place
-  manipulation.pickAndPlace(manipulation.graspPoseList, "retract");
+  manipulation.pickandPlace(manipulation.createPickingEEFPoseList(grasp_cluster.get_grasp_candidates()), "retreat");
 
   // Set planning flag to OK for next loop
   grasp_cluster.set_planning(0);
