@@ -89,6 +89,7 @@ class Perception
     std::vector<PointCloud<PointXYZRGB>> cloud_list;
 
     //Flag Variables
+    bool pointcloud_found;
     bool cloud_stored;
 
     //Functions

@@ -104,9 +104,11 @@ PointCloud<PointXYZRGB> Perception::concatenateClouds(std::vector<PointCloud<Poi
   PointCloud<PointXYZRGB>::Ptr temp_cloud(new PointCloud<PointXYZRGB>);
 
   *temp_cloud = cloud_snapshot_list[0];
+  ROS_INFO("1");
 
   int j = cloud_snapshot_list.size();
   if (j>1) {
+    ROS_INFO("2");
     for (int i = 1; i < j; i++) {
         *temp_cloud+= cloud_snapshot_list[i];
     }
