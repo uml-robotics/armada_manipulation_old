@@ -1,7 +1,7 @@
 # This repository is being archived 
 Please instead refer to newer maipulation packages in the uml-robotics gihub library such as: https://github.com/uml-robotics/armada_behaviors which is in development as of the time of this writing (07/22)
 
-
+The package has also been renamed (previously uml_hri_nerve_pick_and_place) to be easier to find, identify in the future if needed.
 
 # Table of Contents
 
